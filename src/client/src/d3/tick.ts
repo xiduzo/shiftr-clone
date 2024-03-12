@@ -10,27 +10,11 @@ function getAttr(
   return source[attr] ? Number(source[attr]) : 0;
 }
 
-// function getRandomPointOnCircle(
-//   radius = 500,
-//   widht = window.innerWidth,
-//   height = window.innerHeight,
-// ) {
-//   const angle = Math.random() * Math.PI * 2; // Generate a random angle between 0 and 2*pi
-//   const x = radius * Math.cos(angle) + widht / 2; // Calculate x-coordinate
-//   const y = radius * Math.sin(angle) + height / 2; // Calculate y-coordinate
-//   return { x, y };
-// }
-
 export function tick(
   link: d3.Selection<SVGLineElement, Link, SVGElement, undefined>,
   node: d3.Selection<SVGCircleElement, Node, SVGElement, undefined>,
   text: d3.Selection<SVGTextElement, Node, SVGElement, undefined>,
 ) {
-  node.each((node) => {
-    if (Number.isNaN(node.x)) node.x = window.innerWidth / 2;
-    if (Number.isNaN(node.y)) node.y = window.innerHeight / 2;
-  });
-
   node
     .attr("cx", ({ x }) => {
       if (Number.isNaN(x)) return 0;

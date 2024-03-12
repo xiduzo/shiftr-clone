@@ -3,7 +3,7 @@ import { MQTT_BROKER_NODE_ID, Node } from "./constants";
 
 export function dragstarted(
   event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
-  simulation: d3.Simulation<Node, undefined>,
+  simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
 ) {
   if (!event.active) simulation.alphaTarget(0.3).restart();
   event.subject.fx = event.subject.x;
@@ -18,7 +18,7 @@ export function dragged(event: d3.D3DragEvent<SVGCircleElement, Node, Node>) {
 
 export function dragended(
   event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
-  simulation: d3.Simulation<Node, undefined>,
+  simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
 ) {
   if (!event.active) simulation.alphaTarget(0);
   event.subject.fx = null;

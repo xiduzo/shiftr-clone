@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
-import { addSimulation } from "./simulation";
+import { runSimulation } from "./simulation";
 
 function addLinkStyles(
   linkSelection: d3.Selection<SVGLineElement, Link, SVGGElement, undefined>,
@@ -100,7 +100,7 @@ export function drawSvg(
     .attr("stroke", "none")
     .attr("fill", "none");
 
-  addSimulation(svg, links, nodes, link, node, text);
+  runSimulation(links, nodes, link, node, text);
 
   const svgNode = svg.node();
   const chart = document.querySelector<HTMLDivElement>("#chart");
@@ -109,12 +109,8 @@ export function drawSvg(
   chart.append(svgNode);
 }
 
-export function updateSvg(
-  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
-  links: Link[],
-  nodes: Node[],
-) {
-  const linkGroup = svg.select<SVGGElement>(".links");
+export function updateSvg(links: Link[], nodes: Node[]) {
+  const linkGroup = d3.select<SVGGElement, undefined>(".links");
   const link = linkGroup
     .selectAll<SVGLineElement, Link>(".links line")
     .data(links);
@@ -123,7 +119,7 @@ export function updateSvg(
   link.exit().remove();
   addLinkStyles(newLinks);
 
-  const nodeGroup = svg.select<SVGGElement>(".nodes");
+  const nodeGroup = d3.select<SVGGElement, undefined>(".nodes");
   const node = nodeGroup
     .selectAll<SVGCircleElement, Node>(".nodes circle")
     .data(nodes);
@@ -132,7 +128,7 @@ export function updateSvg(
   node.exit().remove();
   addNodeStyles(newNodes);
 
-  const textGroup = svg.select<SVGGElement>(".texts");
+  const textGroup = d3.select<SVGGElement, undefined>(".texts");
   const text = textGroup
     .selectAll<SVGTextElement, Node>(".texts text")
     .data(nodes, (d) => d.id);
@@ -141,5 +137,5 @@ export function updateSvg(
   text.exit().remove();
   addTextStyles(newTexts);
 
-  addSimulation(svg, links, nodes, newLinks, newNodes, newTexts);
+  runSimulation(links, nodes, newLinks, newNodes, newTexts);
 }

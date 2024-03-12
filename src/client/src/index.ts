@@ -21,8 +21,7 @@ let nodes: Node[] = [
   {
     id: MQTT_BROKER_NODE_ID,
     name: "MQTT Broker",
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
+    ...getRandomCoordinatesOnCircle(),
   },
 ];
 let links: Link[] = [];
@@ -75,7 +74,7 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
       console.log("default", topic, message);
       break;
   }
-  updateSvg(svg, links, nodes);
+  updateSvg(links, nodes);
 }
 
 function getRandomCoordinatesOnCircle(radius = 400) {
@@ -188,3 +187,12 @@ const handlePublish = (message: string) => {
       });
   });
 };
+
+// Press 'R' to reload page
+document.addEventListener("keydown", (event) => {
+  if (event.key === "r") window.location.reload();
+});
+
+window.addEventListener("resize", () => {
+  svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
+});
