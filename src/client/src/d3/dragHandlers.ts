@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { MQTT_BROKER_CENTER, Node } from "./constants";
+import { MQTT_BROKER_NODE_ID, Node } from "./constants";
 
 export function dragstarted(
   event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
@@ -11,7 +11,7 @@ export function dragstarted(
 }
 
 export function dragged(event: d3.D3DragEvent<SVGCircleElement, Node, Node>) {
-  if (event.subject.id === MQTT_BROKER_CENTER) return;
+  if (event.subject.id === MQTT_BROKER_NODE_ID) return;
   event.subject.fx = event.x;
   event.subject.fy = event.y;
 }

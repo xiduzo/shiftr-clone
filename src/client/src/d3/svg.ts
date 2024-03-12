@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { Link, MQTT_BROKER_CENTER, Node } from "./constants";
+import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
 import { addSimulation } from "./simulation";
 
 function addLinkStyles(
@@ -10,7 +10,7 @@ function addLinkStyles(
     .attr("class", "link")
     .attr("stroke-opacity", (link) => {
       const sourceIsMqttBroker =
-        (link.source as Node).id === MQTT_BROKER_CENTER;
+        (link.source as Node).id === MQTT_BROKER_NODE_ID;
       const isToIoTDevice = (link.target as Node).isClient;
       if (sourceIsMqttBroker && isToIoTDevice) return 0.2;
       if (isToIoTDevice) return 0.5;
@@ -18,7 +18,7 @@ function addLinkStyles(
       return 1;
     })
     .attr("stroke-dasharray", (d) => {
-      const sourceIsMqttBroker = (d.source as Node).id === MQTT_BROKER_CENTER;
+      const sourceIsMqttBroker = (d.source as Node).id === MQTT_BROKER_NODE_ID;
       const isToIoTDevice = (d.target as Node).isClient;
 
       if (sourceIsMqttBroker && isToIoTDevice) return "10,5";
@@ -35,8 +35,8 @@ function addNodeStyles(
     .attr("id", ({ id }) => id)
     .attr("class", "node")
     .attr("stroke-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
-    .attr("stroke-width", ({ id }) => (id === MQTT_BROKER_CENTER ? 4 : 2.5))
-    .attr("r", ({ id }) => (id === MQTT_BROKER_CENTER ? 20 : 7.5));
+    .attr("stroke-width", ({ id }) => (id === MQTT_BROKER_NODE_ID ? 4 : 2.5))
+    .attr("r", ({ id }) => (id === MQTT_BROKER_NODE_ID ? 20 : 7.5));
 }
 
 function addTextStyles(
@@ -45,7 +45,7 @@ function addTextStyles(
   textSelection
     .attr("fill-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
     .attr("id", ({ id }) => id)
-    .text(({ id, name }) => (id === MQTT_BROKER_CENTER ? null : name ?? id))
+    .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : name ?? id))
     .attr("class", "text");
 }
 

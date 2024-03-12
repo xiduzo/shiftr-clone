@@ -1,4 +1,4 @@
-import { Link, MQTT_BROKER_CENTER, Node } from "./constants";
+import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
 import * as d3 from "d3";
 import { dragended, dragged, dragstarted } from "./dragHandlers";
 import { tick } from "./tick";
@@ -29,7 +29,7 @@ export function addSimulation(
         .forceLink(links)
         .distance((link) => {
           const sourceIsMqttBroker =
-            (link.source as Node).id === MQTT_BROKER_CENTER;
+            (link.source as Node).id === MQTT_BROKER_NODE_ID;
           const isToIoTDevice = (link.target as Node).isClient;
 
           if (sourceIsMqttBroker && isToIoTDevice) return 350;
