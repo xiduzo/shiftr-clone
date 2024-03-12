@@ -1,3 +1,4 @@
 node_modules
 mosquitto/log/mosquitto.log
 mosquitto/data/mosquitto.db
+.env

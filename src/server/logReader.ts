@@ -27,7 +27,7 @@ const TRIGGERS = {
 let _clienId: string | null;
 let _topic: string | null;
 
-const client = new MqttClient("mqtt://username:password@localhost");
+const client = new MqttClient(process.env.SERVER_MQTT_CONNECTION_STRING!);
 export const connections = new Map<string, string[]>();
 
 tail.on("line", async (line: string) => {

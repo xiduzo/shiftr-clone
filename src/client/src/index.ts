@@ -26,10 +26,9 @@ let nodes: Node[] = [
 ];
 let links: Link[] = [];
 
-const client = new MqttClient("ws://127.0.0.1:9001", {
-  username: "username",
-  password: "password",
-});
+const client = new MqttClient(
+  import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING,
+);
 client.on("message", messageHandler);
 
 fetch("http://127.0.0.1:8080")
@@ -54,6 +53,7 @@ fetch("http://127.0.0.1:8080")
   });
 
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
+  console.log("messageHandler", topic, message.toString());
   switch (topic) {
     case "$CONNECTIONS/disconnect":
       handleDisconnect(message.toString());
@@ -140,12 +140,6 @@ const handleUnsubscribe = (message: string) => {
     const path = topic.split("/");
 
     const expectedToRemove = createLinkId(path.at(-1), clientId, topic);
-    console.log(
-      "expectedToRemove",
-      link.id !== expectedToRemove,
-      expectedToRemove,
-      link.id,
-    );
     return link.id !== expectedToRemove;
   });
 };
@@ -168,7 +162,6 @@ const getNodeIdsFromClientToBroker = (clientId: string, links: Link[]) => {
 const handlePublish = (message: string) => {
   const publish = JSON.parse(message);
   const { clientId, topic } = publish;
-  console.log("publish", publish);
   createClientNodeIfNotExist(clientId, nodes);
   createPathNodesIfNotExist(topic, links, nodes);
 
