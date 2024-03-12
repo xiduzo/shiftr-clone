@@ -32,7 +32,7 @@ export function addSimulation(
             (link.source as Node).id === MQTT_BROKER_CENTER;
           const isToIoTDevice = (link.target as Node).isClient;
 
-          if (sourceIsMqttBroker && isToIoTDevice) return 500;
+          if (sourceIsMqttBroker && isToIoTDevice) return 350;
           if (sourceIsMqttBroker || isToIoTDevice) return 175;
           return 100;
         })

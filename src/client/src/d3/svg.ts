@@ -7,9 +7,7 @@ function addLinkStyles(
 ) {
   linkSelection
     .attr("id", (d) => d.id)
-    .attr("stroke", "#E1F1F6")
     .attr("class", "link")
-    .attr("stroke-width", 1.5)
     .attr("stroke-opacity", (link) => {
       const sourceIsMqttBroker =
         (link.source as Node).id === MQTT_BROKER_CENTER;
@@ -36,23 +34,16 @@ function addNodeStyles(
   nodeSelection
     .attr("id", ({ id }) => id)
     .attr("class", "node")
-    .attr("stroke", "#E1F1F6")
     .attr("stroke-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
     .attr("stroke-width", ({ id }) => (id === MQTT_BROKER_CENTER ? 4 : 2.5))
-    .attr("r", ({ id }) => (id === MQTT_BROKER_CENTER ? 20 : 7.5))
-    .attr("fill", "#193F52");
+    .attr("r", ({ id }) => (id === MQTT_BROKER_CENTER ? 20 : 7.5));
 }
 
 function addTextStyles(
   textSelection: d3.Selection<SVGTextElement, Node, SVGGElement, undefined>,
 ) {
   textSelection
-    .attr("fill", "#81CBDF")
-    .attr("font-family", "Arial, sans-serif")
     .attr("fill-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
-    .attr("stroke", "#193f52")
-    .attr("paint-order", "stroke")
-    .attr("stroke-width", 4)
     .attr("id", ({ id }) => id)
     .text(({ id, name }) => (id === MQTT_BROKER_CENTER ? null : name ?? id))
     .attr("class", "text");
@@ -69,7 +60,8 @@ export function drawSvg(
 
   const link = svg
     .append("g")
-    .attr("stroke", "#000")
+    .attr("stroke-width", 1.5)
+    .attr("stroke", "#E1F1F6")
     .attr("class", "links")
     .selectAll<SVGLineElement, Link>("g")
     .data(links)
@@ -78,7 +70,8 @@ export function drawSvg(
 
   const node = svg
     .append("g")
-    .attr("stroke", "#000")
+    .attr("stroke", "#E1F1F6")
+    .attr("fill", "#193F52")
     .attr("class", "nodes")
     .selectAll<SVGCircleElement, Node>("g")
     .data(nodes)
@@ -88,18 +81,25 @@ export function drawSvg(
   const text = svg
     .append("g")
     .attr("class", "texts")
+    .attr("fill", "#81CBDF")
+    .attr("font-family", "Arial, sans-serif")
+    .attr("stroke", "#193f52")
+    .attr("paint-order", "stroke")
+    .attr("stroke-width", 4)
     .selectAll<SVGTextElement, Node>("g")
     .data(nodes)
     .join("text");
   addTextStyles(text);
 
+  svg.append("g").attr("class", "packets").attr("fill", "#E1F1F6");
+
   addSimulation(svg, links, nodes, link, node, text);
 
   const svgNode = svg.node();
   const chart = document.querySelector<HTMLDivElement>("#chart");
-  if (svgNode && chart) {
-    chart.append(svgNode);
-  }
+  if (!svgNode || !chart) return;
+
+  chart.append(svgNode);
 }
 
 export function updateSvg(

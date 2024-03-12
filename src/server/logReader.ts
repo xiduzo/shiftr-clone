@@ -1,5 +1,6 @@
 import { Tail } from "tail";
 import { MqttClient } from "../common/MqttClient";
+import { CLIENT_ID_PREFIX } from "../client/src/d3/constants";
 
 const tail = new Tail("mosquitto/log/mosquitto.log");
 
@@ -57,6 +58,16 @@ tail.on("line", async (line: string) => {
       _clienId = null;
       break;
     case TRIGGERS.PUBLISH:
+      if (_actionPrefix.toLowerCase() !== "received") return;
+      if (clientId.includes(CLIENT_ID_PREFIX)) return;
+
+      const topicRegex = new RegExp(/\S+ ('\S+')/);
+      const match = line.match(topicRegex);
+      if (!match) return;
+
+      const topic = match[1].replace(/'/g, "");
+      await handlePublish(clientId, topic);
+      break;
     case TRIGGERS.PUBACK:
     case TRIGGERS.PUBCOMP:
     case TRIGGERS.PUBREC:
@@ -110,6 +121,13 @@ async function handleUnsubscribe(clientId: string, topic: string) {
   );
   await client.publishAsync(
     "$CONNECTIONS/unsubscribe",
+    JSON.stringify({ clientId, topic }),
+  );
+}
+
+async function handlePublish(clientId: string, topic: string) {
+  await client.publishAsync(
+    "$CONNECTIONS/publish",
     JSON.stringify({ clientId, topic }),
   );
 }
