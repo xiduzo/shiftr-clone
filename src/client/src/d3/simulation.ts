@@ -3,6 +3,13 @@ import * as d3 from "d3";
 import { dragended, dragged, dragstarted } from "./dragHandlers";
 import { tick } from "./tick";
 
+export function getCenter() {
+  return {
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  };
+}
+
 export function addSimulation(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
   links: Link[],

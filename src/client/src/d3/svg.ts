@@ -54,7 +54,7 @@ function addTextStyles(
     .attr("paint-order", "stroke")
     .attr("stroke-width", 4)
     .attr("id", ({ id }) => id)
-    .text(({ id }) => (id === MQTT_BROKER_CENTER ? null : id))
+    .text(({ id, name }) => (id === MQTT_BROKER_CENTER ? null : name ?? id))
     .attr("class", "text");
 }
 
