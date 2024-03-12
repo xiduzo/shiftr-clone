@@ -1,0 +1,32 @@
+{
+  "name": "shiftr-clone",
+  "version": "1.0.0",
+  "description": "**Encrypting the password file**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run build && node build/index.js",
+    "dev": "npm run dev:server & npm run dev:client",
+    "dev:server": "npx nodemon",
+    "dev:client": "vite",
+    "build": "rimraf ./build && tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/node": "^20.11.25",
+    "@types/tail": "^2.2.3",
+    "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.5"
+  },
+  "dependencies": {
+    "d3": "^7.8.5",
+    "mqtt": "^5.3.6",
+    "tail": "^2.2.6"
+  }
+}
