@@ -7,15 +7,12 @@ export function addSimulation(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
   links: Link[],
   nodes: Node[],
+  link: d3.Selection<SVGLineElement, Link, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, Node, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, Node, SVGElement, undefined>,
 ) {
   const width = window.innerWidth;
   const height = window.innerHeight;
-
-  const link = d3.selectAll<SVGLineElement, Link>(".links line").data(links);
-  const node = d3
-    .selectAll<SVGCircleElement, Node>(".nodes circle")
-    .data(nodes);
-  const text = d3.selectAll<SVGTextElement, Node>(".texts text").data(nodes);
 
   const simulation = d3
     .forceSimulation(nodes)

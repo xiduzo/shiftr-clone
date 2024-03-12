@@ -124,7 +124,6 @@ async function handleUnknowAction(line: string) {
 
   const match = new RegExp(`\\S+: ${_clienId}( \\d)? (\\S+)`).exec(line);
   if (match) {
-    console.log("match topic", match[2]);
     _topic = match[2];
     return;
   }

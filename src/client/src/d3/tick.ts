@@ -10,18 +10,42 @@ function getAttr(
   return source[attr] ? Number(source[attr]) : 0;
 }
 
+// function getRandomPointOnCircle(
+//   radius = 500,
+//   widht = window.innerWidth,
+//   height = window.innerHeight,
+// ) {
+//   const angle = Math.random() * Math.PI * 2; // Generate a random angle between 0 and 2*pi
+//   const x = radius * Math.cos(angle) + widht / 2; // Calculate x-coordinate
+//   const y = radius * Math.sin(angle) + height / 2; // Calculate y-coordinate
+//   return { x, y };
+// }
+
 export function tick(
-  link: d3.Selection<SVGLineElement, Link, HTMLElement, undefined>,
-  node: d3.Selection<SVGCircleElement, Node, HTMLElement, undefined>,
-  text: d3.Selection<SVGTextElement, Node, HTMLElement, undefined>,
+  link: d3.Selection<SVGLineElement, Link, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, Node, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, Node, SVGElement, undefined>,
 ) {
+  node.each((node) => {
+    if (Number.isNaN(node.x)) node.x = window.innerWidth / 2;
+    if (Number.isNaN(node.y)) node.y = window.innerHeight / 2;
+  });
+
+  node
+    .attr("cx", ({ x }) => {
+      if (Number.isNaN(x)) return 0;
+      return x ?? 0;
+    })
+    .attr("cy", ({ y }) => {
+      if (Number.isNaN(y)) return 0;
+      return y ?? 0;
+    });
+
   link
     .attr("x1", ({ source }) => getAttr(source, "x"))
     .attr("y1", ({ source }) => getAttr(source, "y"))
     .attr("x2", ({ target }) => getAttr(target, "x"))
     .attr("y2", ({ target }) => getAttr(target, "y"));
-
-  node.attr("cx", ({ x }) => x ?? 0).attr("cy", ({ y }) => y ?? 0);
 
   text
     .attr("x", ({ x }) => {
@@ -31,7 +55,9 @@ export function tick(
         ? horizontal + horizontalOffset
         : horizontal - horizontalOffset;
     })
-    .attr("y", ({ y }) => (y ?? 0) + 5)
+    .attr("y", ({ y }) => {
+      return (y ?? 0) + 5;
+    })
     .attr("text-anchor", ({ x }) =>
       (x ?? 0) < window.innerWidth / 2 ? "start" : "end",
     );

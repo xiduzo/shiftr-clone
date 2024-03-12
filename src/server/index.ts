@@ -1,8 +1,6 @@
 import { connections } from "./logReader";
 import http from "http";
 
-console.log("connections", connections);
-
 /**
  * Simple server to init the FE with the connections
  */

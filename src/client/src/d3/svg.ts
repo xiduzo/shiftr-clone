@@ -93,7 +93,7 @@ export function drawSvg(
     .join("text");
   addTextStyles(text);
 
-  addSimulation(svg, links, nodes);
+  addSimulation(svg, links, nodes, link, node, text);
 
   const svgNode = svg.node();
   const chart = document.querySelector<HTMLDivElement>("#chart");
@@ -134,5 +134,5 @@ export function updateSvg(
   text.exit().remove();
   addTextStyles(newTexts);
 
-  addSimulation(svg, links, nodes);
+  addSimulation(svg, links, nodes, newLinks, newNodes, newTexts);
 }
