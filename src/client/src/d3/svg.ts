@@ -91,7 +91,14 @@ export function drawSvg(
     .join("text");
   addTextStyles(text);
 
-  svg.append("g").attr("class", "packets").attr("fill", "#E1F1F6");
+  svg
+    .append("g")
+    .attr("class", "packets")
+    .attr("fill", "#E1F1F6")
+    .append("g")
+    .attr("class", "paths")
+    .attr("stroke", "none")
+    .attr("fill", "none");
 
   addSimulation(svg, links, nodes, link, node, text);
 
