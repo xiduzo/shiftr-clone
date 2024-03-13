@@ -135,7 +135,7 @@ async function handleUnknowAction(line: string) {
   const words = line.split(" ");
 
   if (line.includes("closed its connection") || line.includes("disconnected")) {
-    handleDisconnect(words[2]);
+    await handleDisconnect(words[2]);
     return;
   }
 
