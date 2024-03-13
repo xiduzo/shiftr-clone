@@ -41,9 +41,9 @@ fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
       topics.forEach((topic) =>
         createPathNodesIfNotExist(topic, links, nodes, clientId),
       );
-      requestAnimationFrame((time) => animate(time, svg));
     });
 
+    requestAnimationFrame((time) => animate(time, svg));
     drawSvg(svg, links, nodes);
     await client.subscribeAsync("$CONNECTIONS/#");
   });
@@ -169,6 +169,7 @@ const handlePublish = (message: string) => {
   // TODO: Handle publish on topic with `+` and `#` wildcards
   const publish = JSON.parse(message);
   const { clientId, topic } = publish;
+
   createClientNodeIfNotExist(clientId, nodes);
   createPathNodesIfNotExist(topic, links, nodes);
 

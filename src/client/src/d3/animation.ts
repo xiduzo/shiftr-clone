@@ -1,15 +1,15 @@
-export const animations = new Map<string, string[]>();
-export const animationCallbacks = new Map<string, () => void>();
-
 import * as d3 from "d3";
 import { SimulationNode } from "./types";
 import { getNodePosition } from "./utils";
 
 const firstTime = new Map<string, boolean>();
 const activeAnimations = new Map<string, boolean>();
+
+export const animations = new Map<string, string[]>();
+export const animationCallbacks = new Map<string, () => void>();
 export async function animate(
   _time: number,
-  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>
+  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
 ) {
   const currentAnimations = Object.entries(Object.fromEntries(animations))
     .filter(([id]) => !activeAnimations.get(id))
