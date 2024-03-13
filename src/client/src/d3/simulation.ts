@@ -8,7 +8,7 @@ const simulation = d3
   .forceSimulation()
   .force(
     "link",
-    d3.forceLink().id((d) => (d as SimulationNode).id)
+    d3.forceLink().id((d) => (d as SimulationNode).id),
   )
   .force("charge", d3.forceManyBody())
   .force("node", d3.forceCollide(15));
@@ -18,7 +18,7 @@ export function runSimulation(
   nodes: SimulationNode[],
   link: d3.Selection<SVGLineElement, SimulationLink, SVGElement, undefined>,
   node: d3.Selection<SVGCircleElement, SimulationNode, SVGElement, undefined>,
-  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>
+  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>,
 ) {
   // Update simulation's links and nodes
   simulation.nodes(nodes);
@@ -35,7 +35,7 @@ export function runSimulation(
         if (sourceIsMqttBroker || isToIoTDevice) return 175;
         return 100;
       })
-      .id((d) => (d as SimulationNode).id)
+      .id((d) => (d as SimulationNode).id),
   );
 
   // Start the simulation
@@ -53,6 +53,6 @@ export function runSimulation(
       .drag()
       .on("start", (event) => dragstarted(event, simulation))
       .on("drag", dragged)
-      .on("end", (event) => dragended(event, simulation))
+      .on("end", (event) => dragended(event, simulation)),
   );
 }

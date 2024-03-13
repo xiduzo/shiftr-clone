@@ -1,5 +1,6 @@
 import MQTT from "mqtt";
 import { CLIENT_ID_PREFIX } from "./constants";
+import { generateUUID } from "./utils";
 
 export class MqttClient {
   private client: MQTT.MqttClient | null = null;
@@ -31,7 +32,7 @@ export class MqttClient {
 
   public async on(
     item: Parameters<typeof MQTT.MqttClient.prototype.on>[0],
-    callback: Parameters<typeof MQTT.MqttClient.prototype.on>[1]
+    callback: Parameters<typeof MQTT.MqttClient.prototype.on>[1],
   ) {
     const client = await this.#getClient();
     client.on(item, callback);
@@ -40,19 +41,24 @@ export class MqttClient {
 
   public async publishAsync(
     topic: string,
-    message: string | Buffer,
+    message: object,
     options?: MQTT.IClientPublishOptions,
-    callback?: MQTT.PacketCallback
+    callback?: MQTT.PacketCallback,
   ) {
     console.log("publishing", topic, message);
     const client = await this.#getClient();
-    client.publish(topic, message, options, callback);
+    client.publish(
+      topic,
+      JSON.stringify({ ...message, id: generateUUID() }),
+      options,
+      callback,
+    );
   }
 
   public async subscribeAsync(
     topicObject: string | string[] | MQTT.ISubscriptionMap,
     options?: MQTT.IClientSubscribeOptions | MQTT.IClientSubscribeProperties,
-    callback?: MQTT.ClientSubscribeCallback
+    callback?: MQTT.ClientSubscribeCallback,
   ) {
     const client = await this.#getClient();
     client.subscribe(topicObject, options, callback);

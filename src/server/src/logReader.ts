@@ -92,16 +92,13 @@ async function startTailing() {
 async function handleConnect(clientId: string) {
   console.log(`${clientId} connected`);
   connections.set(clientId, []);
-  await client.publishAsync("$CONNECTIONS/connect", JSON.stringify(clientId));
+  await client.publishAsync("$CONNECTIONS/connect", { clientId });
 }
 
 async function handleDisconnect(clientId: string) {
   console.log(`${clientId} disconnected`);
   connections.delete(clientId);
-  await client.publishAsync(
-    "$CONNECTIONS/disconnect",
-    JSON.stringify(clientId),
-  );
+  await client.publishAsync("$CONNECTIONS/disconnect", { clientId });
 }
 
 async function handleSubscribe(clientId: string, topic: string) {
@@ -112,10 +109,7 @@ async function handleSubscribe(clientId: string, topic: string) {
     clientId,
     Array.from(new Set([...(subscriptions ?? []), topic])),
   );
-  await client.publishAsync(
-    "$CONNECTIONS/subscribe",
-    JSON.stringify({ clientId, topic }),
-  );
+  await client.publishAsync("$CONNECTIONS/subscribe", { clientId, topic });
 }
 
 async function handleUnsubscribe(clientId: string, topic: string) {
@@ -126,17 +120,11 @@ async function handleUnsubscribe(clientId: string, topic: string) {
     clientId,
     subscriptions?.filter((subscription) => subscription !== topic) ?? [],
   );
-  await client.publishAsync(
-    "$CONNECTIONS/unsubscribe",
-    JSON.stringify({ clientId, topic }),
-  );
+  await client.publishAsync("$CONNECTIONS/unsubscribe", { clientId, topic });
 }
 
 async function handlePublish(clientId: string, topic: string) {
-  await client.publishAsync(
-    "$CONNECTIONS/publish",
-    JSON.stringify({ clientId, topic }),
-  );
+  await client.publishAsync("$CONNECTIONS/publish", { clientId, topic });
 }
 
 async function handleUnknowAction(line: string) {

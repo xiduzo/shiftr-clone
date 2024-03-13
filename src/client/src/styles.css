@@ -1,13 +1,63 @@
+:root {
+    --color-primary: #193f52;
+    --color-primary-dark: #16394a;
+    --color-primary-darker: #153646;
+    --color-primary-darkest: #112c39;
+    --color-primary-light: #1b455a;
+    --color-primary-lighter: #1d485e;
+    --color-primary-lightest: #20526b;
+    --color-secondary: #81cbdf;
+    --color-secondary-dark: #65bfd8;
+    --color-secondary-darker: #57bad4;
+    --color-secondary-darkest: #32a5c4;
+    --color-secondary-light: #9dd7e6;
+    --color-secondary-lighter: #abdcea;
+    --color-secondary-lightest: #d5eef4;
+}
+
 * {
     padding: 0;
     margin: 0;
 }
 
 body {
-    background-color: #193f52;
+    background-color: var(--color-primary);
     width: 100vw;
     height: 100vh;
+    font-size: 26px;
+    font-family: "Roboto", sans-serif;
     overflow: hidden;
+    color: var(--color-secondary);
+}
+
+#chart,
+#hotkeys {
+    position: absolute;
+}
+
+#hotkeys {
+    padding: 16px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--color-primary-lightest);
+}
+
+#hotkeys li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#hotkeys li span {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 2px dashed var(--color-primary-lightest);
 }
 
 svg text {
@@ -21,19 +71,4 @@ svg circle:not(#MQTT_BROKER_CENTER):hover {
 
 svg circle:not(#MQTT_BROKER_CENTER):active {
     cursor: grabbing;
-}
-
-.svg-container {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    padding-bottom: 100%; /* aspect ratio */
-    vertical-align: top;
-    overflow: hidden;
-}
-.svg-content-responsive {
-    display: inline-block;
-    position: absolute;
-    top: 10px;
-    left: 0;
 }

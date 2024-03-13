@@ -7,29 +7,28 @@ const activeAnimations = new Map<string, boolean>();
 
 export const animations = new Map<string, string[]>();
 export const animationCallbacks = new Map<string, () => void>();
-export async function animate(
-  _time: number,
-  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
-) {
+export async function animate() {
   const currentAnimations = Object.entries(Object.fromEntries(animations))
     .filter(([id]) => !activeAnimations.get(id))
     .map(([id, steps]) => {
+      activeAnimations.set(id, true);
       const [current, ...rest] = steps;
 
       const isFirst = firstTime.get(id) ?? true;
       rest.length ? firstTime.set(id, false) : firstTime.delete(id);
 
       const position = getNodePosition(current);
-      activeAnimations.set(id, true);
+
       return { ...position, id, isFirst };
     });
 
-  const packetGroup = svg.select<SVGGElement>(".packets");
+  const packetGroup = d3.select<SVGGElement, unknown>(".packets");
   const packet = packetGroup
     .selectAll<SVGCircleElement, SimulationNode>(".packet")
     .data(currentAnimations, ({ id }: SimulationNode) => id);
 
   const newPackets = packet.enter().append("circle").merge(packet);
+
   newPackets
     .attr("id", ({ id }) => id)
     .attr("class", "packet")
@@ -44,9 +43,9 @@ export async function animate(
       activeAnimations.delete(id);
       if (rest.length) return;
       animationCallbacks.get(id)?.();
-      animations.delete(id);
+      animationCallbacks.delete(id);
       d3.select(this).remove();
     });
 
-  requestAnimationFrame((time) => animate(time, svg));
+  requestAnimationFrame(animate);
 }

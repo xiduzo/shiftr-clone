@@ -9,7 +9,7 @@ function addLinkStyles(
     SimulationLink,
     SVGGElement,
     undefined
-  >
+  >,
 ) {
   linkSelection
     .attr("id", (d) => d.id)
@@ -44,7 +44,7 @@ function addNodeStyles(
     SimulationNode,
     SVGGElement,
     undefined
-  >
+  >,
 ) {
   nodeSelection
     .attr("id", ({ id }) => id)
@@ -65,7 +65,7 @@ function addTextStyles(
     SimulationNode,
     SVGGElement,
     undefined
-  >
+  >,
 ) {
   textSelection
     .attr("fill-opacity", ({ isClient, name }) => {
@@ -73,7 +73,6 @@ function addTextStyles(
       if (name === "+") return 0.05;
 
       return 1;
-      // return isClient ? 0.5 : 1
     })
     .attr("id", ({ id }) => id)
     .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : name ?? id))
@@ -83,8 +82,9 @@ function addTextStyles(
 export function drawSvg(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
   links: SimulationLink[],
-  nodes: SimulationNode[]
+  nodes: SimulationNode[],
 ) {
+  const style = getComputedStyle(document.documentElement);
   const width = window.innerWidth;
   const height = window.innerHeight;
   svg.attr("width", width).attr("height", height);
@@ -92,7 +92,7 @@ export function drawSvg(
   const link = svg
     .append("g")
     .attr("stroke-width", 1.5)
-    .attr("stroke", "#E1F1F6")
+    .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
     .attr("class", "links")
     .selectAll<SVGLineElement, SimulationLink>("g")
     .data(links)
@@ -101,8 +101,8 @@ export function drawSvg(
 
   const node = svg
     .append("g")
-    .attr("stroke", "#E1F1F6")
-    .attr("fill", "#193F52")
+    .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
+    .attr("fill", style.getPropertyValue("--color-primary"))
     .attr("class", "nodes")
     .selectAll<SVGCircleElement, SimulationNode>("g")
     .data(nodes)
@@ -112,9 +112,10 @@ export function drawSvg(
   const text = svg
     .append("g")
     .attr("class", "texts")
-    .attr("fill", "#81CBDF")
+    .attr("fill", style.getPropertyValue("--color-secondary"))
     .attr("font-family", "Arial, sans-serif")
-    .attr("stroke", "#193f52")
+    .attr("font-size", 16)
+    .attr("stroke", style.getPropertyValue("--color-primary"))
     .attr("paint-order", "stroke")
     .attr("stroke-width", 4)
     .selectAll<SVGTextElement, SimulationNode>("g")
@@ -125,11 +126,7 @@ export function drawSvg(
   svg
     .append("g")
     .attr("class", "packets")
-    .attr("fill", "#E1F1F6")
-    .append("g")
-    .attr("class", "paths")
-    .attr("stroke", "none")
-    .attr("fill", "none");
+    .attr("fill", style.getPropertyValue("--color-secondary-lightest"));
 
   runSimulation(links, nodes, link, node, text);
 

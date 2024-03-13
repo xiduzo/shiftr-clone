@@ -23,7 +23,7 @@ export function getNodePosition(nodeId: string) {
 export function findOrCreateNode(
   id: string,
   nodes: SimulationNode[],
-  name?: string
+  name?: string,
 ) {
   const item = nodes.find((node) => node.id === id);
 
@@ -42,7 +42,7 @@ export function createPathNodesIfNotExist(
   topic: string,
   links: SimulationLink[],
   nodes: SimulationNode[],
-  clientId?: string
+  clientId?: string,
 ) {
   const paths = topic.split("/");
 
@@ -77,7 +77,6 @@ export function createPathNodesIfNotExist(
           return sourceIsWildcard && targetIsClient;
         })
         .forEach(({ target }) => {
-          console.log(target);
           pushIfNotExists(links, {
             id: createLinkId(id, (target as SimulationNode).id, topic),
             source: findOrCreateNode(id, nodes, path),

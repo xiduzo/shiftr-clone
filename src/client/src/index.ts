@@ -9,8 +9,9 @@ import {
   findOrCreateNode,
 } from "./d3/utils";
 import { animate, animationCallbacks, animations } from "./d3/animation";
-import { generateUUID } from "./utils";
+import { generateUUID } from "../../common/utils";
 import { MQTT_BROKER_NODE_ID, CLIENT_ID_PREFIX } from "../../common/constants";
+import { z } from "zod";
 
 const svg = d3.create("svg");
 let nodes: SimulationNode[] = [
@@ -22,48 +23,71 @@ let nodes: SimulationNode[] = [
 ];
 let links: SimulationLink[] = [];
 
+requestAnimationFrame(animate);
+drawSvg(svg, links, nodes);
+fetchConnections();
 const client = new MqttClient(
   import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING,
 );
 client.on("message", messageHandler);
+client.subscribeAsync("$CONNECTIONS/#");
 
-fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
-  .then((res) => res.json())
-  .then(async (data: { [key: string]: string[] }) => {
-    Object.entries(data).forEach(([clientId, topics]) => {
-      if (clientId.includes(CLIENT_ID_PREFIX)) return;
-      createClientNodeIfNotExist(clientId, nodes);
-      pushIfNotExists(links, {
-        id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
-        source: findOrCreateNode(MQTT_BROKER_NODE_ID, nodes),
-        target: findOrCreateNode(clientId, nodes),
+function fetchConnections() {
+  fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
+    .then((res) => res.json())
+    .then(async (data: { [key: string]: string[] }) => {
+      links = [];
+      nodes = nodes.slice(0, 1);
+
+      Object.entries(data).forEach(([clientId, topics]) => {
+        if (clientId.includes(CLIENT_ID_PREFIX)) return;
+        createClientNodeIfNotExist(clientId, nodes);
+        pushIfNotExists(links, {
+          id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
+          source: findOrCreateNode(MQTT_BROKER_NODE_ID, nodes),
+          target: findOrCreateNode(clientId, nodes),
+        });
+        topics.forEach((topic) =>
+          createPathNodesIfNotExist(topic, links, nodes, clientId),
+        );
       });
-      topics.forEach((topic) =>
-        createPathNodesIfNotExist(topic, links, nodes, clientId),
-      );
+
+      updateSvg(links, nodes);
     });
+}
 
-    requestAnimationFrame((time) => animate(time, svg));
-    drawSvg(svg, links, nodes);
-    await client.subscribeAsync("$CONNECTIONS/#");
-  });
+const Message = z.object({
+  id: z.string().uuid(),
+});
+const ClientIdMessage = Message.extend({
+  clientId: z.string(),
+});
+const TopicMessage = ClientIdMessage.extend({
+  topic: z.string(),
+});
 
+const handledMessages = new Map<string, string>();
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
+  const parsed = JSON.parse(message.toString());
+  const result = Message.parse(parsed);
+  if (handledMessages.get(topic) === result.id) return;
+  handledMessages.set(topic, result.id);
+
   switch (topic) {
     case "$CONNECTIONS/disconnect":
-      handleDisconnect(message.toString());
+      handleDisconnect(ClientIdMessage.parse(parsed));
       break;
     case "$CONNECTIONS/connect":
-      handleConnect(message.toString());
+      handleConnect(ClientIdMessage.parse(parsed));
       break;
     case "$CONNECTIONS/subscribe":
-      handleSubscribe(message.toString());
+      handleSubscribe(TopicMessage.parse(parsed));
       break;
     case "$CONNECTIONS/unsubscribe":
-      handleUnsubscribe(message.toString());
+      handleUnsubscribe(TopicMessage.parse(parsed));
       break;
     case "$CONNECTIONS/publish":
-      handlePublish(message.toString());
+      handlePublish(TopicMessage.parse(parsed));
       break;
     default:
       console.log("default", topic, message);
@@ -73,10 +97,7 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
 }
 
 function getRandomCoordinatesOnCircle(radius = 400) {
-  // Generate a random angle in radians
   const angle = Math.random() * 2 * Math.PI;
-
-  // Calculate x and y coordinates using trigonometry
   const x = radius * Math.cos(angle) + window.innerWidth / 2;
   const y = radius * Math.sin(angle) + window.innerHeight / 2;
 
@@ -95,59 +116,54 @@ export function createClientNodeIfNotExist(
   });
 }
 
-const handleDisconnect = (message: string) => {
-  const disconnectedClientId = JSON.parse(message);
-  if (disconnectedClientId.includes(CLIENT_ID_PREFIX)) return;
+function handleDisconnect(message: z.infer<typeof ClientIdMessage>) {
+  const { clientId } = message;
 
-  nodes = nodes.filter((node) => node.id !== disconnectedClientId);
+  if (clientId.includes(CLIENT_ID_PREFIX)) return;
+
+  nodes = nodes.filter((node) => node.id !== clientId);
   links = links.filter(
     (link) =>
-      (link.source as SimulationLink).id !== disconnectedClientId &&
-      (link.target as SimulationLink).id !== disconnectedClientId,
+      (link.source as SimulationLink).id !== clientId &&
+      (link.target as SimulationLink).id !== clientId,
   );
   return { nodes, links };
-};
+}
 
-const handleConnect = (message: string) => {
-  const connectedClientId = JSON.parse(message);
-  if (connectedClientId.includes(CLIENT_ID_PREFIX)) return;
-  createClientNodeIfNotExist(connectedClientId, nodes);
+function handleConnect(message: z.infer<typeof ClientIdMessage>) {
+  const { clientId } = message;
+  if (clientId.includes(CLIENT_ID_PREFIX)) return;
+  createClientNodeIfNotExist(clientId, nodes);
   pushIfNotExists(links, {
-    id: `${MQTT_BROKER_NODE_ID}_${connectedClientId}`,
+    id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
     source: findOrCreateNode(MQTT_BROKER_NODE_ID, nodes),
-    target: findOrCreateNode(connectedClientId, nodes),
+    target: findOrCreateNode(clientId, nodes),
   });
-};
+}
 
-const handleSubscribe = (message: string) => {
+function handleSubscribe(message: z.infer<typeof TopicMessage>) {
   // TODO: Handle subscribe on topic with `#` wildcards
-  const subscription = JSON.parse(message);
-  if (subscription.clientId.includes(CLIENT_ID_PREFIX)) return;
-  createPathNodesIfNotExist(
-    subscription.topic,
-    links,
-    nodes,
-    subscription.clientId,
-  );
-};
+  const { clientId, topic } = message;
+  if (clientId.includes(CLIENT_ID_PREFIX)) return;
+  createPathNodesIfNotExist(topic, links, nodes, clientId);
+}
 
-const handleUnsubscribe = (message: string) => {
+function handleUnsubscribe(message: z.infer<typeof TopicMessage>) {
   // TODO: Handle unsubscribe on topic with `+` or `#` wildcards
-  const unsubscription = JSON.parse(message);
-  if (unsubscription.clientId.includes(CLIENT_ID_PREFIX)) return;
+  const { clientId, topic } = message;
+  if (clientId.includes(CLIENT_ID_PREFIX)) return;
   links = links.filter((link) => {
-    const { clientId, topic } = unsubscription;
     const path = topic.split("/");
-    const expectedToRemove = createLinkId(path.at(-1), clientId, topic);
+    const expectedToRemove = createLinkId(path.at(-1)!, clientId, topic);
 
     return link.id !== expectedToRemove;
   });
-};
+}
 
-const getNodeIdsFromClientToBroker = (
+function getNodeIdsFromClientToBroker(
   clientId: string,
   links: SimulationLink[],
-) => {
+) {
   let currentId = clientId;
   const nodeIds = [clientId];
 
@@ -163,12 +179,11 @@ const getNodeIdsFromClientToBroker = (
     }
   }
   return nodeIds;
-};
+}
 
-const handlePublish = (message: string) => {
+function handlePublish(message: z.infer<typeof TopicMessage>) {
   // TODO: Handle publish on topic with `+` and `#` wildcards
-  const publish = JSON.parse(message);
-  const { clientId, topic } = publish;
+  const { clientId, topic } = message;
 
   createClientNodeIfNotExist(clientId, nodes);
   createPathNodesIfNotExist(topic, links, nodes);
@@ -179,7 +194,9 @@ const handlePublish = (message: string) => {
     const linksInTopic = links.filter((link) => link.topic === topic);
     linksInTopic
       .filter((link) => (link.target as SimulationNode).isClient)
-      .map((link) => (link.target as SimulationNode).id)
+      .map((link) => {
+        return (link.target as SimulationNode).id;
+      })
       .forEach((clientId) => {
         animations.set(generateUUID(), [
           MQTT_BROKER_NODE_ID,
@@ -187,12 +204,30 @@ const handlePublish = (message: string) => {
         ]);
       });
   });
-};
+}
+
+const keyHandlers = new Map<string, Function>();
+function addKeyboardHandler(
+  key: string,
+  description: string,
+  callback: Function,
+) {
+  keyHandlers.set(key, callback);
+  const hotkeys = document.getElementById("hotkeys");
+  if (!hotkeys) return;
+
+  const li = document.createElement("li");
+  li.innerHTML = `<span>${key}</span> ${description}`;
+  hotkeys.appendChild(li);
+}
 
 // Press 'R' to reload page
 document.addEventListener("keydown", (event) => {
-  if (event.key === "r") window.location.reload();
+  keyHandlers.get(event.key)?.();
 });
+
+addKeyboardHandler("c", "clear graph", fetchConnections);
+addKeyboardHandler("r", "reload page", () => window.location.reload());
 
 window.addEventListener("resize", () => {
   svg.attr("width", window.innerWidth).attr("height", window.innerHeight);

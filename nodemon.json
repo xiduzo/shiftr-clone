@@ -2,5 +2,8 @@
   "watch": ["src/server/src"],
   "ext": ".ts,.js",
   "ignore": [],
-  "exec": "npx ts-node ./src/server/src/index.ts"
+  "exec": "npx ts-node ./src/server/src/index.ts",
+  "env": {
+    "PORT": "8081"
+  }
 }
