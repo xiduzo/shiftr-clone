@@ -1,6 +1,7 @@
 import { Tail } from "tail";
 import { MqttClient } from "../../common/MqttClient";
 import { CLIENT_ID_PREFIX } from "../../common/constants";
+import { SHIFTR_CLONE_TOPIC } from "../../common/topics";
 
 const TRIGGERS = {
   CONNECT: "CONNECT",
@@ -92,13 +93,13 @@ async function startTailing() {
 async function handleConnect(clientId: string) {
   console.log(`${clientId} connected`);
   connections.set(clientId, []);
-  await client.publishAsync("$CONNECTIONS/connect", { clientId });
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.CONNECT, { clientId });
 }
 
 async function handleDisconnect(clientId: string) {
   console.log(`${clientId} disconnected`);
   connections.delete(clientId);
-  await client.publishAsync("$CONNECTIONS/disconnect", { clientId });
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.DISCONNECT, { clientId });
 }
 
 async function handleSubscribe(clientId: string, topic: string) {
@@ -109,7 +110,7 @@ async function handleSubscribe(clientId: string, topic: string) {
     clientId,
     Array.from(new Set([...(subscriptions ?? []), topic])),
   );
-  await client.publishAsync("$CONNECTIONS/subscribe", { clientId, topic });
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.SUBSCRIBE, { clientId, topic });
 }
 
 async function handleUnsubscribe(clientId: string, topic: string) {
@@ -120,11 +121,14 @@ async function handleUnsubscribe(clientId: string, topic: string) {
     clientId,
     subscriptions?.filter((subscription) => subscription !== topic) ?? [],
   );
-  await client.publishAsync("$CONNECTIONS/unsubscribe", { clientId, topic });
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.UNSUBSCRIBE, {
+    clientId,
+    topic,
+  });
 }
 
 async function handlePublish(clientId: string, topic: string) {
-  await client.publishAsync("$CONNECTIONS/publish", { clientId, topic });
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.PUBLISH, { clientId, topic });
 }
 
 async function handleUnknowAction(line: string) {

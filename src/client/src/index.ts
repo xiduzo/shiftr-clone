@@ -1,4 +1,5 @@
 import { MqttClient } from "../../common/MqttClient";
+import { SHIFTR_CLONE_TOPIC } from "../../common/topics";
 import * as d3 from "d3";
 import { drawSvg, updateSvg } from "./d3/svg";
 import { SimulationLink, SimulationNode } from "./d3/types";
@@ -30,7 +31,7 @@ const client = new MqttClient(
   import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING,
 );
 client.on("message", messageHandler);
-client.subscribeAsync("$CONNECTIONS/#");
+client.subscribeAsync("SHIFTR_CLONE/#");
 
 function fetchConnections() {
   fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
@@ -68,25 +69,26 @@ const TopicMessage = ClientIdMessage.extend({
 
 const handledMessages = new Map<string, string>();
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
+  console.log("messageHandler", topic, message.toString());
   const parsed = JSON.parse(message.toString());
   const result = Message.parse(parsed);
   if (handledMessages.get(topic) === result.id) return;
   handledMessages.set(topic, result.id);
 
   switch (topic) {
-    case "$CONNECTIONS/disconnect":
+    case SHIFTR_CLONE_TOPIC.DISCONNECT:
       handleDisconnect(ClientIdMessage.parse(parsed));
       break;
-    case "$CONNECTIONS/connect":
+    case SHIFTR_CLONE_TOPIC.CONNECT:
       handleConnect(ClientIdMessage.parse(parsed));
       break;
-    case "$CONNECTIONS/subscribe":
+    case SHIFTR_CLONE_TOPIC.SUBSCRIBE:
       handleSubscribe(TopicMessage.parse(parsed));
       break;
-    case "$CONNECTIONS/unsubscribe":
+    case SHIFTR_CLONE_TOPIC.UNSUBSCRIBE:
       handleUnsubscribe(TopicMessage.parse(parsed));
       break;
-    case "$CONNECTIONS/publish":
+    case SHIFTR_CLONE_TOPIC.PUBLISH:
       handlePublish(TopicMessage.parse(parsed));
       break;
     default:
