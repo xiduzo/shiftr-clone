@@ -1,23 +1,24 @@
-import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
+import { SimulationLink, SimulationNode } from "./types";
 import * as d3 from "d3";
 import { dragended, dragged, dragstarted } from "./dragHandlers";
 import { tick } from "./tick";
+import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 
 const simulation = d3
   .forceSimulation()
   .force(
     "link",
-    d3.forceLink().id((d) => (d as Node).id),
+    d3.forceLink().id((d) => (d as SimulationNode).id)
   )
   .force("charge", d3.forceManyBody())
   .force("node", d3.forceCollide(15));
 
 export function runSimulation(
-  links: Link[],
-  nodes: Node[],
-  link: d3.Selection<SVGLineElement, Link, SVGElement, undefined>,
-  node: d3.Selection<SVGCircleElement, Node, SVGElement, undefined>,
-  text: d3.Selection<SVGTextElement, Node, SVGElement, undefined>,
+  links: SimulationLink[],
+  nodes: SimulationNode[],
+  link: d3.Selection<SVGLineElement, SimulationLink, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, SimulationNode, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>
 ) {
   // Update simulation's links and nodes
   simulation.nodes(nodes);
@@ -27,14 +28,14 @@ export function runSimulation(
       .forceLink(links)
       .distance((link) => {
         const sourceIsMqttBroker =
-          (link.source as Node).id === MQTT_BROKER_NODE_ID;
-        const isToIoTDevice = (link.target as Node).isClient;
+          (link.source as SimulationNode).id === MQTT_BROKER_NODE_ID;
+        const isToIoTDevice = (link.target as SimulationNode).isClient;
 
         if (sourceIsMqttBroker && isToIoTDevice) return 350;
         if (sourceIsMqttBroker || isToIoTDevice) return 175;
         return 100;
       })
-      .id((d) => (d as Node).id),
+      .id((d) => (d as SimulationNode).id)
   );
 
   // Start the simulation
@@ -52,6 +53,6 @@ export function runSimulation(
       .drag()
       .on("start", (event) => dragstarted(event, simulation))
       .on("drag", dragged)
-      .on("end", (event) => dragended(event, simulation)),
+      .on("end", (event) => dragended(event, simulation))
   );
 }

@@ -1,18 +1,25 @@
 import * as d3 from "d3";
-import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
+import { SimulationLink, SimulationNode } from "./types";
 import { runSimulation } from "./simulation";
+import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 
 function addLinkStyles(
-  linkSelection: d3.Selection<SVGLineElement, Link, SVGGElement, undefined>,
+  linkSelection: d3.Selection<
+    SVGLineElement,
+    SimulationLink,
+    SVGGElement,
+    undefined
+  >
 ) {
   linkSelection
     .attr("id", (d) => d.id)
     .attr("class", "link")
     .attr("stroke-opacity", ({ source, target }) => {
-      const sourceIsMqttBroker = (source as Node).id === MQTT_BROKER_NODE_ID;
-      const isToIoTDevice = (target as Node).isClient;
-      const isWildcardTarget = (target as Node).id.includes("_+_");
-      const isWildcardSource = (source as Node).id.includes("_+_");
+      const sourceIsMqttBroker =
+        (source as SimulationNode).id === MQTT_BROKER_NODE_ID;
+      const isToIoTDevice = (target as SimulationNode).isClient;
+      const isWildcardTarget = (target as SimulationNode).id.includes("_+_");
+      const isWildcardSource = (source as SimulationNode).id.includes("_+_");
       if (isWildcardTarget || isWildcardSource) return 0.05;
       if (sourceIsMqttBroker && isToIoTDevice) return 0.2;
       if (isToIoTDevice) return 0.5;
@@ -20,8 +27,9 @@ function addLinkStyles(
       return 1;
     })
     .attr("stroke-dasharray", (d) => {
-      const sourceIsMqttBroker = (d.source as Node).id === MQTT_BROKER_NODE_ID;
-      const isToIoTDevice = (d.target as Node).isClient;
+      const sourceIsMqttBroker =
+        (d.source as SimulationNode).id === MQTT_BROKER_NODE_ID;
+      const isToIoTDevice = (d.target as SimulationNode).isClient;
 
       if (sourceIsMqttBroker && isToIoTDevice) return "10,5";
       if (isToIoTDevice) return "10,5";
@@ -31,7 +39,12 @@ function addLinkStyles(
 }
 
 function addNodeStyles(
-  nodeSelection: d3.Selection<SVGCircleElement, Node, SVGGElement, undefined>,
+  nodeSelection: d3.Selection<
+    SVGCircleElement,
+    SimulationNode,
+    SVGGElement,
+    undefined
+  >
 ) {
   nodeSelection
     .attr("id", ({ id }) => id)
@@ -47,7 +60,12 @@ function addNodeStyles(
 }
 
 function addTextStyles(
-  textSelection: d3.Selection<SVGTextElement, Node, SVGGElement, undefined>,
+  textSelection: d3.Selection<
+    SVGTextElement,
+    SimulationNode,
+    SVGGElement,
+    undefined
+  >
 ) {
   textSelection
     .attr("fill-opacity", ({ isClient, name }) => {
@@ -64,8 +82,8 @@ function addTextStyles(
 
 export function drawSvg(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
-  links: Link[],
-  nodes: Node[],
+  links: SimulationLink[],
+  nodes: SimulationNode[]
 ) {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -76,7 +94,7 @@ export function drawSvg(
     .attr("stroke-width", 1.5)
     .attr("stroke", "#E1F1F6")
     .attr("class", "links")
-    .selectAll<SVGLineElement, Link>("g")
+    .selectAll<SVGLineElement, SimulationLink>("g")
     .data(links)
     .join("line");
   addLinkStyles(link);
@@ -86,7 +104,7 @@ export function drawSvg(
     .attr("stroke", "#E1F1F6")
     .attr("fill", "#193F52")
     .attr("class", "nodes")
-    .selectAll<SVGCircleElement, Node>("g")
+    .selectAll<SVGCircleElement, SimulationNode>("g")
     .data(nodes)
     .join("circle");
   addNodeStyles(node);
@@ -99,7 +117,7 @@ export function drawSvg(
     .attr("stroke", "#193f52")
     .attr("paint-order", "stroke")
     .attr("stroke-width", 4)
-    .selectAll<SVGTextElement, Node>("g")
+    .selectAll<SVGTextElement, SimulationNode>("g")
     .data(nodes)
     .join("text");
   addTextStyles(text);
@@ -122,10 +140,10 @@ export function drawSvg(
   chart.append(svgNode);
 }
 
-export function updateSvg(links: Link[], nodes: Node[]) {
+export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
   const linkGroup = d3.select<SVGGElement, undefined>(".links");
   const link = linkGroup
-    .selectAll<SVGLineElement, Link>(".links line")
+    .selectAll<SVGLineElement, SimulationLink>(".links line")
     .data(links);
 
   const newLinks = link.enter().append("line").merge(link);
@@ -134,7 +152,7 @@ export function updateSvg(links: Link[], nodes: Node[]) {
 
   const nodeGroup = d3.select<SVGGElement, undefined>(".nodes");
   const node = nodeGroup
-    .selectAll<SVGCircleElement, Node>(".nodes circle")
+    .selectAll<SVGCircleElement, SimulationNode>(".nodes circle")
     .data(nodes);
 
   const newNodes = node.enter().append("circle").merge(node);
@@ -143,7 +161,7 @@ export function updateSvg(links: Link[], nodes: Node[]) {
 
   const textGroup = d3.select<SVGGElement, undefined>(".texts");
   const text = textGroup
-    .selectAll<SVGTextElement, Node>(".texts text")
+    .selectAll<SVGTextElement, SimulationNode>(".texts text")
     .data(nodes, (d) => d.id);
 
   const newTexts = text.enter().append("text").merge(text);

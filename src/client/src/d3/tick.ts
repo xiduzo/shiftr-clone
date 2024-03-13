@@ -1,8 +1,8 @@
-import { Link, Node } from "./constants";
+import { SimulationLink, SimulationNode } from "./types";
 
 function getAttr(
   source: string | number | d3.SimulationNodeDatum,
-  attr: keyof d3.SimulationNodeDatum = "x",
+  attr: keyof d3.SimulationNodeDatum = "x"
 ) {
   if (typeof source === "string") return Number(source);
   if (typeof source === "number") return source;
@@ -11,9 +11,9 @@ function getAttr(
 }
 
 export function tick(
-  link: d3.Selection<SVGLineElement, Link, SVGElement, undefined>,
-  node: d3.Selection<SVGCircleElement, Node, SVGElement, undefined>,
-  text: d3.Selection<SVGTextElement, Node, SVGElement, undefined>,
+  link: d3.Selection<SVGLineElement, SimulationLink, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, SimulationNode, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>
 ) {
   node
     .attr("cx", ({ x }) => {
@@ -43,6 +43,6 @@ export function tick(
       return (y ?? 0) + 5;
     })
     .attr("text-anchor", ({ x }) =>
-      (x ?? 0) < window.innerWidth / 2 ? "start" : "end",
+      (x ?? 0) < window.innerWidth / 2 ? "start" : "end"
     );
 }

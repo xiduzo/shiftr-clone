@@ -9,7 +9,9 @@
     "dev": "npm run dev:server & npm run dev:client",
     "dev:server": "npx nodemon",
     "dev:client": "vite",
-    "build": "rimraf ./build && tsc"
+    "build": "rimraf ./build && tsc",
+    "build:client": "vite build",
+    "build:server": "rimraf ./src/server/dist && tsc --project src/server/tsconfig.json"
   },
   "keywords": [],
   "author": "",

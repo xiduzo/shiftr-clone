@@ -1,6 +1,6 @@
 import { Tail } from "tail";
-import { MqttClient } from "../common/MqttClient";
-import { CLIENT_ID_PREFIX } from "../client/src/d3/constants";
+import { MqttClient } from "../../common/MqttClient";
+import { CLIENT_ID_PREFIX } from "../../common/constants";
 
 const tail = new Tail(process.env.SERVER_MQTT_LOG_FILE!);
 

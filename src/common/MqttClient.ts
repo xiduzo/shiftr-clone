@@ -1,5 +1,5 @@
 import MQTT from "mqtt";
-import { CLIENT_ID_PREFIX } from "../client/src/d3/constants";
+import { CLIENT_ID_PREFIX } from "./constants";
 
 export class MqttClient {
   private client: MQTT.MqttClient | null = null;
@@ -31,7 +31,7 @@ export class MqttClient {
 
   public async on(
     item: Parameters<typeof MQTT.MqttClient.prototype.on>[0],
-    callback: Parameters<typeof MQTT.MqttClient.prototype.on>[1],
+    callback: Parameters<typeof MQTT.MqttClient.prototype.on>[1]
   ) {
     const client = await this.#getClient();
     client.on(item, callback);
@@ -42,7 +42,7 @@ export class MqttClient {
     topic: string,
     message: string | Buffer,
     options?: MQTT.IClientPublishOptions,
-    callback?: MQTT.PacketCallback,
+    callback?: MQTT.PacketCallback
   ) {
     console.log("publishing", topic, message);
     const client = await this.#getClient();
@@ -52,7 +52,7 @@ export class MqttClient {
   public async subscribeAsync(
     topicObject: string | string[] | MQTT.ISubscriptionMap,
     options?: MQTT.IClientSubscribeOptions | MQTT.IClientSubscribeProperties,
-    callback?: MQTT.ClientSubscribeCallback,
+    callback?: MQTT.ClientSubscribeCallback
   ) {
     const client = await this.#getClient();
     client.subscribe(topicObject, options, callback);

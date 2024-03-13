@@ -1,12 +1,7 @@
 import { MqttClient } from "../../common/MqttClient";
 import * as d3 from "d3";
 import { drawSvg, updateSvg } from "./d3/svg";
-import {
-  CLIENT_ID_PREFIX,
-  Link,
-  MQTT_BROKER_NODE_ID,
-  Node,
-} from "./d3/constants";
+import { SimulationLink, SimulationNode } from "./d3/types";
 import { pushIfNotExists } from "./array";
 import {
   createLinkId,
@@ -15,19 +10,20 @@ import {
 } from "./d3/utils";
 import { animate, animationCallbacks, animations } from "./d3/animation";
 import { generateUUID } from "./utils";
+import { MQTT_BROKER_NODE_ID, CLIENT_ID_PREFIX } from "../../common/constants";
 
 const svg = d3.create("svg");
-let nodes: Node[] = [
+let nodes: SimulationNode[] = [
   {
     id: MQTT_BROKER_NODE_ID,
     name: "MQTT Broker",
     ...getRandomCoordinatesOnCircle(),
   },
 ];
-let links: Link[] = [];
+let links: SimulationLink[] = [];
 
 const client = new MqttClient(
-  import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING,
+  import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING
 );
 client.on("message", messageHandler);
 
@@ -43,7 +39,7 @@ fetch("http://127.0.0.1:8080")
         target: findOrCreateNode(clientId, nodes),
       });
       topics.forEach((topic) =>
-        createPathNodesIfNotExist(topic, links, nodes, clientId),
+        createPathNodesIfNotExist(topic, links, nodes, clientId)
       );
       requestAnimationFrame((time) => animate(time, svg));
     });
@@ -87,7 +83,10 @@ function getRandomCoordinatesOnCircle(radius = 400) {
   return { x, y };
 }
 
-export function createClientNodeIfNotExist(clientId: string, nodes: Node[]) {
+export function createClientNodeIfNotExist(
+  clientId: string,
+  nodes: SimulationNode[]
+) {
   pushIfNotExists(nodes, {
     id: clientId.replace("/", "_"), // to avoid d3 crash with topics and clients with same id
     name: clientId,
@@ -103,8 +102,8 @@ const handleDisconnect = (message: string) => {
   nodes = nodes.filter((node) => node.id !== disconnectedClientId);
   links = links.filter(
     (link) =>
-      (link.source as Link).id !== disconnectedClientId &&
-      (link.target as Link).id !== disconnectedClientId,
+      (link.source as SimulationLink).id !== disconnectedClientId &&
+      (link.target as SimulationLink).id !== disconnectedClientId
   );
   return { nodes, links };
 };
@@ -128,7 +127,7 @@ const handleSubscribe = (message: string) => {
     subscription.topic,
     links,
     nodes,
-    subscription.clientId,
+    subscription.clientId
   );
 };
 
@@ -145,17 +144,20 @@ const handleUnsubscribe = (message: string) => {
   });
 };
 
-const getNodeIdsFromClientToBroker = (clientId: string, links: Link[]) => {
+const getNodeIdsFromClientToBroker = (
+  clientId: string,
+  links: SimulationLink[]
+) => {
   let currentId = clientId;
   const nodeIds = [clientId];
 
   while (currentId !== MQTT_BROKER_NODE_ID) {
     const link = links.find((link) => {
-      const linkId = (link.target as Node).id;
+      const linkId = (link.target as SimulationNode).id;
       return linkId === currentId;
     });
     if (link) {
-      const id = (link.source as Node).id;
+      const id = (link.source as SimulationNode).id;
       currentId = id;
       nodeIds.unshift(id);
     }
@@ -175,8 +177,8 @@ const handlePublish = (message: string) => {
   animationCallbacks.set(animationId, () => {
     const linksInTopic = links.filter((link) => link.topic === topic);
     linksInTopic
-      .filter((link) => (link.target as Node).isClient)
-      .map((link) => (link.target as Node).id)
+      .filter((link) => (link.target as SimulationNode).isClient)
+      .map((link) => (link.target as SimulationNode).id)
       .forEach((clientId) => {
         animations.set(generateUUID(), [
           MQTT_BROKER_NODE_ID,

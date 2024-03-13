@@ -2,14 +2,14 @@ export const animations = new Map<string, string[]>();
 export const animationCallbacks = new Map<string, () => void>();
 
 import * as d3 from "d3";
-import { Node } from "./constants";
+import { SimulationNode } from "./types";
 import { getNodePosition } from "./utils";
 
 const firstTime = new Map<string, boolean>();
 const activeAnimations = new Map<string, boolean>();
 export async function animate(
   _time: number,
-  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
+  svg: d3.Selection<SVGSVGElement, undefined, null, undefined>
 ) {
   const currentAnimations = Object.entries(Object.fromEntries(animations))
     .filter(([id]) => !activeAnimations.get(id))
@@ -26,8 +26,8 @@ export async function animate(
 
   const packetGroup = svg.select<SVGGElement>(".packets");
   const packet = packetGroup
-    .selectAll<SVGCircleElement, Node>(".packet")
-    .data(currentAnimations, ({ id }: Node) => id);
+    .selectAll<SVGCircleElement, SimulationNode>(".packet")
+    .data(currentAnimations, ({ id }: SimulationNode) => id);
 
   const newPackets = packet.enter().append("circle").merge(packet);
   newPackets

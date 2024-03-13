@@ -1,6 +1,7 @@
 import * as d3 from "d3";
-import { Link, MQTT_BROKER_NODE_ID, Node } from "./constants";
+import { SimulationLink, SimulationNode } from "./types";
 import { pushIfNotExists } from "../array";
+import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 
 export function createLinkId(source: string, target: string, topic: string) {
   return `FROM_${source}_TO_${target}_ON_${topic}`;
@@ -19,7 +20,11 @@ export function getNodePosition(nodeId: string) {
   }
 }
 
-export function findOrCreateNode(id: string, nodes: Node[], name?: string) {
+export function findOrCreateNode(
+  id: string,
+  nodes: SimulationNode[],
+  name?: string
+) {
   const item = nodes.find((node) => node.id === id);
 
   return (
@@ -35,9 +40,9 @@ export function findOrCreateNode(id: string, nodes: Node[], name?: string) {
 
 export function createPathNodesIfNotExist(
   topic: string,
-  links: Link[],
-  nodes: Node[],
-  clientId?: string,
+  links: SimulationLink[],
+  nodes: SimulationNode[],
+  clientId?: string
 ) {
   const paths = topic.split("/");
 
@@ -67,16 +72,16 @@ export function createPathNodesIfNotExist(
       links
         .filter(({ source, target }) => {
           const sourceIsWildcard =
-            (source as Node).id === id.replace(path, "+");
-          const targetIsClient = (target as Node).isClient;
+            (source as SimulationNode).id === id.replace(path, "+");
+          const targetIsClient = (target as SimulationNode).isClient;
           return sourceIsWildcard && targetIsClient;
         })
         .forEach(({ target }) => {
           console.log(target);
           pushIfNotExists(links, {
-            id: createLinkId(id, (target as Node).id, topic),
+            id: createLinkId(id, (target as SimulationNode).id, topic),
             source: findOrCreateNode(id, nodes, path),
-            target: findOrCreateNode((target as Node).id, nodes),
+            target: findOrCreateNode((target as SimulationNode).id, nodes),
             topic,
           });
         });
