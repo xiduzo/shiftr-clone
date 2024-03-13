@@ -2,8 +2,6 @@ import { Tail } from "tail";
 import { MqttClient } from "../../common/MqttClient";
 import { CLIENT_ID_PREFIX } from "../../common/constants";
 
-const tail = new Tail(process.env.SERVER_MQTT_LOG_FILE!);
-
 const TRIGGERS = {
   CONNECT: "CONNECT",
   CONNACK: "CONNACK",
@@ -30,57 +28,66 @@ let _topic: string | null;
 const client = new MqttClient(process.env.SERVER_MQTT_CONNECTION_STRING!);
 export const connections = new Map<string, string[]>();
 
-tail.on("line", async (line: string) => {
-  console.log(">>>>>>>>>>>", line);
+async function startTailing() {
+  try {
+    const tail = new Tail(process.env.SERVER_MQTT_LOG_FILE!);
+    tail.on("line", async (line: string) => {
+      console.log(">>>>>>>>>>>", line);
 
-  const words = line.split(" ");
-  const [_timeStamp, _actionPrefix, action, _actionVerb, clientId] = words;
+      const words = line.split(" ");
+      const [_timeStamp, _actionPrefix, action, _actionVerb, clientId] = words;
 
-  switch (action) {
-    case TRIGGERS.DISCONNECT:
-      await handleDisconnect(clientId);
-      break;
-    case TRIGGERS.CONNACK:
-      await handleConnect(clientId);
-      break;
-    case TRIGGERS.UNSUBSCRIBE:
-    case TRIGGERS.SUBSCRIBE:
-      _clienId = clientId;
-      break;
-    case TRIGGERS.SUBACK:
-    case TRIGGERS.UNSUBACK:
-      if (!_clienId || !_topic) return;
-      action === TRIGGERS.SUBACK
-        ? await handleSubscribe(_clienId, _topic)
-        : await handleUnsubscribe(_clienId, _topic);
+      switch (action) {
+        case TRIGGERS.DISCONNECT:
+          await handleDisconnect(clientId);
+          break;
+        case TRIGGERS.CONNACK:
+          await handleConnect(clientId);
+          break;
+        case TRIGGERS.UNSUBSCRIBE:
+        case TRIGGERS.SUBSCRIBE:
+          _clienId = clientId;
+          break;
+        case TRIGGERS.SUBACK:
+        case TRIGGERS.UNSUBACK:
+          if (!_clienId || !_topic) return;
+          action === TRIGGERS.SUBACK
+            ? await handleSubscribe(_clienId, _topic)
+            : await handleUnsubscribe(_clienId, _topic);
 
-      _topic = null;
-      _clienId = null;
-      break;
-    case TRIGGERS.PUBLISH:
-      if (_actionPrefix.toLowerCase() !== "received") return;
-      if (clientId.includes(CLIENT_ID_PREFIX)) return;
+          _topic = null;
+          _clienId = null;
+          break;
+        case TRIGGERS.PUBLISH:
+          if (_actionPrefix.toLowerCase() !== "received") return;
+          if (clientId.includes(CLIENT_ID_PREFIX)) return;
 
-      const topicRegex = new RegExp(/\S+ ('\S+')/);
-      const match = line.match(topicRegex);
-      if (!match) return;
+          const topicRegex = new RegExp(/\S+ ('\S+')/);
+          const match = line.match(topicRegex);
+          if (!match) return;
 
-      const topic = match[1].replace(/'/g, "");
-      await handlePublish(clientId, topic);
-      break;
-    case TRIGGERS.PUBACK:
-    case TRIGGERS.PUBCOMP:
-    case TRIGGERS.PUBREC:
-    case TRIGGERS.PUBREL:
-    case TRIGGERS.PINGREQ:
-    case TRIGGERS.PINGRESP:
-      // TODO Handle?
-      break;
-    default:
-      await handleUnknowAction(line);
-      break;
+          const topic = match[1].replace(/'/g, "");
+          await handlePublish(clientId, topic);
+          break;
+        case TRIGGERS.PUBACK:
+        case TRIGGERS.PUBCOMP:
+        case TRIGGERS.PUBREC:
+        case TRIGGERS.PUBREL:
+        case TRIGGERS.PINGREQ:
+        case TRIGGERS.PINGRESP:
+          // TODO Handle?
+          break;
+        default:
+          await handleUnknowAction(line);
+          break;
+      }
+    });
+  } catch (error) {
+    console.error("Error starting tailing", error);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    startTailing();
   }
-});
+}
 
 async function handleConnect(clientId: string) {
   console.log(`${clientId} connected`);
@@ -146,3 +153,5 @@ async function handleUnknowAction(line: string) {
     return;
   }
 }
+
+startTailing();
