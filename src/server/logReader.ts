@@ -2,7 +2,7 @@ import { Tail } from "tail";
 import { MqttClient } from "../common/MqttClient";
 import { CLIENT_ID_PREFIX } from "../client/src/d3/constants";
 
-const tail = new Tail("mosquitto/log/mosquitto.log");
+const tail = new Tail(process.env.SERVER_MQTT_LOG_FILE!);
 
 const TRIGGERS = {
   CONNECT: "CONNECT",
@@ -140,9 +140,9 @@ async function handleUnknowAction(line: string) {
     return;
   }
 
-  const match = new RegExp(`\\S+: ${_clienId}( \\d)? (\\S+)`).exec(line);
-  if (match) {
-    _topic = match[2];
+  const topicMatch = new RegExp(`\\S+: ${_clienId}( \\d)? (\\S+)`).exec(line);
+  if (topicMatch) {
+    _topic = topicMatch[2];
     return;
   }
 }

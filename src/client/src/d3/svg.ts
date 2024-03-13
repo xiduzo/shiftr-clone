@@ -8,10 +8,12 @@ function addLinkStyles(
   linkSelection
     .attr("id", (d) => d.id)
     .attr("class", "link")
-    .attr("stroke-opacity", (link) => {
-      const sourceIsMqttBroker =
-        (link.source as Node).id === MQTT_BROKER_NODE_ID;
-      const isToIoTDevice = (link.target as Node).isClient;
+    .attr("stroke-opacity", ({ source, target }) => {
+      const sourceIsMqttBroker = (source as Node).id === MQTT_BROKER_NODE_ID;
+      const isToIoTDevice = (target as Node).isClient;
+      const isWildcardTarget = (target as Node).id.includes("_+_");
+      const isWildcardSource = (source as Node).id.includes("_+_");
+      if (isWildcardTarget || isWildcardSource) return 0.05;
       if (sourceIsMqttBroker && isToIoTDevice) return 0.2;
       if (isToIoTDevice) return 0.5;
 
@@ -34,7 +36,12 @@ function addNodeStyles(
   nodeSelection
     .attr("id", ({ id }) => id)
     .attr("class", "node")
-    .attr("stroke-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
+    .attr("stroke-opacity", ({ isClient, id }) => {
+      if (isClient) return 0.5;
+      if (id.includes("_+_")) return 0.05;
+
+      return 1;
+    })
     .attr("stroke-width", ({ id }) => (id === MQTT_BROKER_NODE_ID ? 4 : 2.5))
     .attr("r", ({ id }) => (id === MQTT_BROKER_NODE_ID ? 20 : 7.5));
 }
@@ -43,7 +50,13 @@ function addTextStyles(
   textSelection: d3.Selection<SVGTextElement, Node, SVGGElement, undefined>,
 ) {
   textSelection
-    .attr("fill-opacity", ({ isClient }) => (isClient ? 0.5 : 1))
+    .attr("fill-opacity", ({ isClient, name }) => {
+      if (isClient) return 0.5;
+      if (name === "+") return 0.05;
+
+      return 1;
+      // return isClient ? 0.5 : 1
+    })
     .attr("id", ({ id }) => id)
     .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : name ?? id))
     .attr("class", "text");

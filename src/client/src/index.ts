@@ -53,7 +53,6 @@ fetch("http://127.0.0.1:8080")
   });
 
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
-  console.log("messageHandler", topic, message.toString());
   switch (topic) {
     case "$CONNECTIONS/disconnect":
       handleDisconnect(message.toString());
@@ -122,6 +121,7 @@ const handleConnect = (message: string) => {
 };
 
 const handleSubscribe = (message: string) => {
+  // TODO: Handle subscribe on topic with `#` wildcards
   const subscription = JSON.parse(message);
   if (subscription.clientId.includes(CLIENT_ID_PREFIX)) return;
   createPathNodesIfNotExist(
@@ -133,13 +133,14 @@ const handleSubscribe = (message: string) => {
 };
 
 const handleUnsubscribe = (message: string) => {
+  // TODO: Handle unsubscribe on topic with `+` or `#` wildcards
   const unsubscription = JSON.parse(message);
   if (unsubscription.clientId.includes(CLIENT_ID_PREFIX)) return;
   links = links.filter((link) => {
     const { clientId, topic } = unsubscription;
     const path = topic.split("/");
-
     const expectedToRemove = createLinkId(path.at(-1), clientId, topic);
+
     return link.id !== expectedToRemove;
   });
 };
@@ -149,7 +150,10 @@ const getNodeIdsFromClientToBroker = (clientId: string, links: Link[]) => {
   const nodeIds = [clientId];
 
   while (currentId !== MQTT_BROKER_NODE_ID) {
-    const link = links.find((link) => (link.target as Node).id === currentId);
+    const link = links.find((link) => {
+      const linkId = (link.target as Node).id;
+      return linkId === currentId;
+    });
     if (link) {
       const id = (link.source as Node).id;
       currentId = id;
@@ -160,6 +164,7 @@ const getNodeIdsFromClientToBroker = (clientId: string, links: Link[]) => {
 };
 
 const handlePublish = (message: string) => {
+  // TODO: Handle publish on topic with `+` and `#` wildcards
   const publish = JSON.parse(message);
   const { clientId, topic } = publish;
   createClientNodeIfNotExist(clientId, nodes);
