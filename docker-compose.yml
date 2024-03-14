@@ -6,7 +6,7 @@ services:
     container_name: mosquitto
     ports:
       - "1883:1883" # MQTT port
-      - "9001:9001" # MQTT over WebSockets (optional)
+      - "8083:8083" # MQTT over WebSockets (optional)
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
