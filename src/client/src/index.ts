@@ -14,6 +14,7 @@ import { generateUUID } from "../../common/utils";
 import { MQTT_BROKER_NODE_ID, CLIENT_ID_PREFIX } from "../../common/constants";
 import { z } from "zod";
 
+// localStorage.debug = "mqttjs*"; // For debugging MQTT client
 const svg = d3.create("svg");
 let nodes: SimulationNode[] = [
   {
@@ -69,7 +70,7 @@ const TopicMessage = ClientIdMessage.extend({
 
 const handledMessages = new Map<string, string>();
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
-  console.log("messageHandler", topic, message.toString());
+  // console.log("messageHandler", topic, message.toString());
   const parsed = JSON.parse(message.toString());
   const result = Message.parse(parsed);
   if (handledMessages.get(topic) === result.id) return;
@@ -111,7 +112,7 @@ export function createClientNodeIfNotExist(
   nodes: SimulationNode[],
 ) {
   pushIfNotExists(nodes, {
-    id: clientId.replace("/", "_"), // to avoid d3 crash with topics and clients with same id
+    id: clientId,
     name: clientId,
     isClient: true,
     ...getRandomCoordinatesOnCircle(),
@@ -162,12 +163,9 @@ function handleUnsubscribe(message: z.infer<typeof TopicMessage>) {
   });
 }
 
-function getNodeIdsFromClientToBroker(
-  clientId: string,
-  links: SimulationLink[],
-) {
-  let currentId = clientId;
-  const nodeIds = [clientId];
+function getPathFromBrokerToNodeId(nodeId: string, links: SimulationLink[]) {
+  let currentId = nodeId;
+  const nodeIds = [nodeId];
 
   while (currentId !== MQTT_BROKER_NODE_ID) {
     const link = links.find((link) => {
@@ -183,6 +181,16 @@ function getNodeIdsFromClientToBroker(
   return nodeIds;
 }
 
+function findEdges(links: SimulationLink[]) {
+  const sources = new Set(
+    links.map(({ source }) => (source as SimulationNode).id),
+  );
+  const edges = links.filter(
+    ({ target }) => !sources.has((target as SimulationNode).id),
+  );
+  return edges;
+}
+
 function handlePublish(message: z.infer<typeof TopicMessage>) {
   // TODO: Handle publish on topic with `+` and `#` wildcards
   const { clientId, topic } = message;
@@ -194,15 +202,16 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   animations.set(animationId, [clientId, MQTT_BROKER_NODE_ID]);
   animationCallbacks.set(animationId, () => {
     const linksInTopic = links.filter((link) => link.topic === topic);
-    linksInTopic
-      .filter((link) => (link.target as SimulationNode).isClient)
+    const edges = findEdges(linksInTopic);
+
+    edges
       .map((link) => {
         return (link.target as SimulationNode).id;
       })
-      .forEach((clientId) => {
+      .forEach((edgeId) => {
         animations.set(generateUUID(), [
           MQTT_BROKER_NODE_ID,
-          ...getNodeIdsFromClientToBroker(clientId, linksInTopic),
+          ...getPathFromBrokerToNodeId(edgeId, linksInTopic),
         ]);
       });
   });

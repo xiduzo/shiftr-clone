@@ -48,7 +48,7 @@ export function createPathNodesIfNotExist(
 
   let pathWalked = "";
   paths.forEach((path, index, array) => {
-    const id = `${pathWalked}${path}_`;
+    const id = `${pathWalked}${pathWalked === "" ? "" : "_"}${path}`;
 
     if (index === 0) {
       pushIfNotExists(links, {
