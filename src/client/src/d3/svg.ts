@@ -59,15 +59,15 @@ function addNodeStyles(
     .attr("r", ({ id }) => (id === MQTT_BROKER_NODE_ID ? 20 : 7.5));
 }
 
-function addTextStyles(
-  textSelection: d3.Selection<
+function addLabelStyles(
+  labelSelection: d3.Selection<
     SVGTextElement,
     SimulationNode,
     SVGGElement,
     undefined
   >,
 ) {
-  textSelection
+  labelSelection
     .attr("fill-opacity", ({ isClient, name }) => {
       if (isClient) return 0.5;
       if (name === "+") return 0.05;
@@ -76,7 +76,7 @@ function addTextStyles(
     })
     .attr("id", ({ id }) => id)
     .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : name ?? id))
-    .attr("class", "text");
+    .attr("class", "label");
 }
 
 export function drawSvg(
@@ -93,7 +93,7 @@ export function drawSvg(
     .append("g")
     .attr("stroke-width", 1.5)
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
-    .attr("class", "links")
+    .attr("id", "links")
     .selectAll<SVGLineElement, SimulationLink>("g")
     .data(links)
     .join("line");
@@ -103,7 +103,7 @@ export function drawSvg(
     .append("g")
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
     .attr("fill", style.getPropertyValue("--color-primary"))
-    .attr("class", "nodes")
+    .attr("id", "nodes")
     .selectAll<SVGCircleElement, SimulationNode>("g")
     .data(nodes)
     .join("circle");
@@ -111,7 +111,7 @@ export function drawSvg(
 
   const text = svg
     .append("g")
-    .attr("class", "texts")
+    .attr("id", "labels")
     .attr("fill", style.getPropertyValue("--color-secondary"))
     .attr("font-family", "Arial, sans-serif")
     .attr("font-size", 16)
@@ -121,7 +121,7 @@ export function drawSvg(
     .selectAll<SVGTextElement, SimulationNode>("g")
     .data(nodes)
     .join("text");
-  addTextStyles(text);
+  addLabelStyles(text);
 
   svg
     .append("g")
@@ -138,32 +138,32 @@ export function drawSvg(
 }
 
 export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
-  const linkGroup = d3.select<SVGGElement, undefined>(".links");
+  const linkGroup = d3.select<SVGGElement, undefined>("#links");
   const link = linkGroup
-    .selectAll<SVGLineElement, SimulationLink>(".links line")
+    .selectAll<SVGLineElement, SimulationLink>("#links line")
     .data(links);
 
   const newLinks = link.enter().append("line").merge(link);
   link.exit().remove();
   addLinkStyles(newLinks);
 
-  const nodeGroup = d3.select<SVGGElement, undefined>(".nodes");
+  const nodeGroup = d3.select<SVGGElement, undefined>("#nodes");
   const node = nodeGroup
-    .selectAll<SVGCircleElement, SimulationNode>(".nodes circle")
+    .selectAll<SVGCircleElement, SimulationNode>("#nodes circle")
     .data(nodes);
 
   const newNodes = node.enter().append("circle").merge(node);
   node.exit().remove();
   addNodeStyles(newNodes);
 
-  const textGroup = d3.select<SVGGElement, undefined>(".texts");
+  const textGroup = d3.select<SVGGElement, undefined>("#labels");
   const text = textGroup
-    .selectAll<SVGTextElement, SimulationNode>(".texts text")
+    .selectAll<SVGTextElement, SimulationNode>("#labels text")
     .data(nodes, (d) => d.id);
 
   const newTexts = text.enter().append("text").merge(text);
   text.exit().remove();
-  addTextStyles(newTexts);
+  addLabelStyles(newTexts);
 
   runSimulation(links, nodes, newLinks, newNodes, newTexts);
 }

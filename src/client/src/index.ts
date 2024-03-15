@@ -200,6 +200,11 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   const { clientId, topic } = message;
 
   createClientNodeIfNotExist(clientId, nodes);
+  pushIfNotExists(links, {
+    id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
+    source: findOrCreateNode(MQTT_BROKER_NODE_ID, nodes),
+    target: findOrCreateNode(clientId, nodes),
+  });
   createPathNodesIfNotExist(topic, links, nodes);
 
   const animationId = generateUUID();
@@ -232,10 +237,7 @@ function addKeyboardHandler(
   if (!hotkeys) return;
 
   const li = document.createElement("li");
-  // Find first key in description and make it wrap it in a span
-
   li.innerHTML = description.replace(key, `<span>${key}</span>`);
-  // li.innerHTML = `<span>${key}</span> ${description}`;
   hotkeys.appendChild(li);
 }
 
@@ -249,4 +251,8 @@ addKeyboardHandler("r", "reload page", () => window.location.reload());
 
 window.addEventListener("resize", () => {
   svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
+});
+
+d3.select(window).on("resize", () => {
+  updateSvg(links, nodes);
 });

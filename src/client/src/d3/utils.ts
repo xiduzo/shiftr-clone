@@ -8,7 +8,7 @@ export function createLinkId(source: string, target: string, topic: string) {
 }
 
 export function getNodePosition(nodeId: string) {
-  const node = d3.select(`.node#${nodeId}`);
+  const node = d3.select(`#nodes #${nodeId}`);
 
   try {
     const x = +node.attr("cx");
