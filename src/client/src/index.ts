@@ -15,6 +15,9 @@ import { MQTT_BROKER_NODE_ID, CLIENT_ID_PREFIX } from "../../common/constants";
 import { z } from "zod";
 
 // localStorage.debug = "mqttjs*"; // For debugging MQTT client
+
+document.querySelector("#host")!.innerHTML = window.location.host;
+
 const svg = d3.create("svg");
 let nodes: SimulationNode[] = [
   {
@@ -229,7 +232,10 @@ function addKeyboardHandler(
   if (!hotkeys) return;
 
   const li = document.createElement("li");
-  li.innerHTML = `<span>${key}</span> ${description}`;
+  // Find first key in description and make it wrap it in a span
+
+  li.innerHTML = description.replace(key, `<span>${key}</span>`);
+  // li.innerHTML = `<span>${key}</span> ${description}`;
   hotkeys.appendChild(li);
 }
 

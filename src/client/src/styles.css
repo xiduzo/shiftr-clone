@@ -30,8 +30,21 @@ body {
     color: var(--color-secondary);
 }
 
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 18px;
+    }
+}
+
+@media only screen and (max-width: 1200px) {
+    body {
+        font-size: 22px;
+    }
+}
+
 #chart,
-#hotkeys {
+#hotkeys,
+#host {
     position: absolute;
 }
 
@@ -44,20 +57,15 @@ body {
     color: var(--color-primary-lightest);
 }
 
-#hotkeys li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+#hotkeys li span {
+    color: var(--color-secondary-darkest);
 }
 
-#hotkeys li span {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    border: 2px dashed var(--color-primary-lightest);
+#host {
+    bottom: 48px;
+    text-align: center;
+    width: 100vw;
+    color: var(--color-primary-lightest);
 }
 
 svg text {
