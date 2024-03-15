@@ -32,6 +32,9 @@ services:
     build:
       context: .
       dockerfile: src/client/Dockerfile
+      args:
+        - VITE_CLIENT_MQTT_CONNECTION_STRING="ws://username:password@mosquitto:8083"
+        - VITE_CLIENT_HTTP_CONNECTIONS="http://mosquitto:8081"
     container_name: client
     ports:
       - "8080:80"
