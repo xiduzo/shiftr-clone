@@ -55,7 +55,8 @@ function fetchConnections() {
       });
 
       updateSvg(links, nodes);
-    });
+    })
+    .catch((err) => console.error(err));
 }
 
 const Message = z.object({
