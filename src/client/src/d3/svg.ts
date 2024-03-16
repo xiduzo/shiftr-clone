@@ -18,8 +18,8 @@ function addLinkStyles(
       const sourceIsMqttBroker =
         (source as SimulationNode).id === MQTT_BROKER_NODE_ID;
       const isToIoTDevice = (target as SimulationNode).isClient;
-      const isWildcardTarget = (target as SimulationNode).id.includes("_+_");
-      const isWildcardSource = (source as SimulationNode).id.includes("_+_");
+      const isWildcardTarget = (target as SimulationNode).id.includes("_+");
+      const isWildcardSource = (source as SimulationNode).id.includes("_+");
       if (isWildcardTarget || isWildcardSource) return 0.05;
       if (sourceIsMqttBroker && isToIoTDevice) return 0.2;
       if (isToIoTDevice) return 0.5;
@@ -51,7 +51,7 @@ function addNodeStyles(
     .attr("class", "node")
     .attr("stroke-opacity", ({ isClient, id }) => {
       if (isClient) return 0.5;
-      if (id.includes("_+_")) return 0.05;
+      if (id.includes("_+")) return 0.05;
 
       return 1;
     })
