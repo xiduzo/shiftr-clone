@@ -9,9 +9,15 @@
     </head>
     <body>
         <main id="app">
-            <ul id="hotkeys"></ul>
-            <div id="host"></div>
-            <section id="chart"></section>
+            <div id="host" aria-hidden="true"></div>
+            <section
+                id="chart"
+                aria-label="visualization showing MQTT traffic"
+            ></section>
+            <ul
+                id="hotkeys"
+                aria-label="hotkeys to interact with the visualization"
+            ></ul>
         </main>
         <script type="module" src="./src/index.ts"></script>
     </body>

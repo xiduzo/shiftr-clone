@@ -250,6 +250,7 @@ function addKeyboardHandler(
   if (!hotkeys) return;
 
   const li = document.createElement("li");
+  li.ariaLabel = description;
   li.innerHTML = description.replace(key, `<span>${key}</span>`);
   hotkeys.appendChild(li);
 }

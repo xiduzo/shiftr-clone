@@ -57,12 +57,20 @@ body {
     color: var(--color-primary-lightest);
 }
 
+#hotkeys li:hover {
+    cursor: pointer;
+    background-color: var(--color-primary-lightest);
+    color: var(--color-primary);
+    padding: 8px;
+    margin: -8px;
+}
+
 #hotkeys li span {
     text-decoration: underline;
 }
 
 #host {
-    bottom: 48px;
+    bottom: 5vh;
     text-align: center;
     width: 100vw;
     color: var(--color-primary-lightest);
