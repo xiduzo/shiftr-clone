@@ -45,14 +45,10 @@ export class MqttClient {
     options?: MQTT.IClientPublishOptions,
     callback?: MQTT.PacketCallback,
   ) {
-    console.log("publishing", topic, message);
+    const toSend = JSON.stringify({ ...message, id: generateUUID() });
+    console.log("publishing", topic, toSend);
     const client = await this.#getClient();
-    client.publish(
-      topic,
-      JSON.stringify({ ...message, id: generateUUID() }),
-      options,
-      callback,
-    );
+    client.publish(topic, toSend, options, callback);
   }
 
   public async subscribeAsync(

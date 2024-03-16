@@ -41,6 +41,7 @@ function fetchConnections() {
   fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
     .then((res) => res.json())
     .then(async (data: { [key: string]: string[] }) => {
+      // TODO dont reset, just remove those that are not there anymore
       links = [];
       nodes = nodes.slice(0, 1);
 
@@ -83,15 +84,19 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
   switch (topic) {
     case SHIFTR_CLONE_TOPIC.DISCONNECT:
       handleDisconnect(ClientIdMessage.parse(parsed));
+      updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.CONNECT:
       handleConnect(ClientIdMessage.parse(parsed));
+      updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.SUBSCRIBE:
       handleSubscribe(TopicMessage.parse(parsed));
+      updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.UNSUBSCRIBE:
       handleUnsubscribe(TopicMessage.parse(parsed));
+      updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.PUBLISH:
       handlePublish(TopicMessage.parse(parsed));
@@ -100,7 +105,6 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
       console.log("default", topic, message);
       break;
   }
-  updateSvg(links, nodes);
 }
 
 function getRandomCoordinatesOnCircle(radius = 400) {
@@ -115,7 +119,7 @@ export function createClientNodeIfNotExist(
   clientId: string,
   nodes: SimulationNode[],
 ) {
-  pushIfNotExists(nodes, {
+  return pushIfNotExists(nodes, {
     id: clientId,
     name: clientId,
     isClient: true,
@@ -199,6 +203,8 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   // TODO: Handle publish on topic with `+` and `#` wildcards
   const { clientId, topic } = message;
 
+  const currentNodesLength = nodes.length;
+  const currentLinksLength = links.length;
   createClientNodeIfNotExist(clientId, nodes);
   pushIfNotExists(links, {
     id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
@@ -206,6 +212,13 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
     target: findOrCreateNode(clientId, nodes),
   });
   createPathNodesIfNotExist(topic, links, nodes);
+
+  if (
+    nodes.length !== currentNodesLength ||
+    links.length !== currentLinksLength
+  ) {
+    updateSvg(links, nodes);
+  }
 
   const animationId = generateUUID();
   animations.set(animationId, [clientId, MQTT_BROKER_NODE_ID]);

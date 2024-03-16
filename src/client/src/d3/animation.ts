@@ -33,6 +33,7 @@ export async function animate() {
     .attr("id", ({ id }) => id)
     .attr("class", "packet")
     .attr("r", 7)
+    .attr("fill-opacity", ({ x, y }) => (x <= 10 || y <= 10 ? 0 : 1))
     .transition(d3.easeElasticInOut.toString())
     .duration(({ isFirst }) => (isFirst ? 0 : 450))
     .attr("cx", ({ x }) => x)
