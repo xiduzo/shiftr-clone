@@ -133,8 +133,13 @@ async function handlePublish(clientId: string, topic: string) {
 
 async function handleUnknowAction(line: string) {
   const words = line.split(" ");
+  // >>>>>>>>>>> 1710612040: Client arduino-feather-1 has exceeded timeout, disconnecting.
 
-  if (line.includes("closed its connection") || line.includes("disconnected")) {
+  if (
+    line.includes("closed its connection") ||
+    line.includes("disconnected") ||
+    line.includes("has exceeded timeout, disconnecting")
+  ) {
     await handleDisconnect(words[2]);
     return;
   }
