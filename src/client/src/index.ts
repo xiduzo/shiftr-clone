@@ -41,11 +41,16 @@ function fetchConnections() {
   fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
     .then((res) => res.json())
     .then(async (data: { [key: string]: string[] }) => {
-      // TODO dont reset, just remove those that are not there anymore
-      links = [];
-      nodes = nodes.slice(0, 1);
+      const clients = Object.entries(data);
+      const clientIds = [
+        MQTT_BROKER_NODE_ID,
+        ...clients.map(([clientId]) => clientId),
+      ];
 
-      Object.entries(data).forEach(([clientId, topics]) => {
+      links = [];
+      nodes = nodes.filter(({ id }) => clientIds.includes(id));
+
+      clients.forEach(([clientId, topics]) => {
         if (clientId.includes(CLIENT_ID_PREFIX)) return;
         createClientNodeIfNotExist(clientId, nodes);
         pushIfNotExists(links, {
@@ -66,28 +71,24 @@ function fetchConnections() {
 const Message = z.object({
   id: z.string().uuid(),
 });
-const ClientIdMessage = Message.extend({
+const ClientMessage = Message.extend({
   clientId: z.string(),
 });
-const TopicMessage = ClientIdMessage.extend({
+const TopicMessage = ClientMessage.extend({
   topic: z.string(),
 });
 
-const handledMessages = new Map<string, string>();
 function messageHandler(topic: string, message: Buffer | Uint8Array) {
   // console.log("messageHandler", topic, message.toString());
   const parsed = JSON.parse(message.toString());
-  const result = Message.parse(parsed);
-  if (handledMessages.get(topic) === result.id) return;
-  handledMessages.set(topic, result.id);
 
   switch (topic) {
     case SHIFTR_CLONE_TOPIC.DISCONNECT:
-      handleDisconnect(ClientIdMessage.parse(parsed));
+      handleDisconnect(ClientMessage.parse(parsed));
       updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.CONNECT:
-      handleConnect(ClientIdMessage.parse(parsed));
+      handleConnect(ClientMessage.parse(parsed));
       updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.SUBSCRIBE:
@@ -99,7 +100,8 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
       updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.PUBLISH:
-      handlePublish(TopicMessage.parse(parsed));
+      const hasNewNodesOrLinks = handlePublish(TopicMessage.parse(parsed));
+      if (hasNewNodesOrLinks) updateSvg(links, nodes);
       break;
     default:
       console.log("default", topic, message);
@@ -109,10 +111,11 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
 
 function getRandomCoordinatesOnCircle(radius = 400) {
   const angle = Math.random() * 2 * Math.PI;
-  const x = radius * Math.cos(angle) + window.innerWidth / 2;
-  const y = radius * Math.sin(angle) + window.innerHeight / 2;
 
-  return { x, y };
+  return {
+    x: radius * Math.cos(angle) + window.innerWidth / 2,
+    y: radius * Math.sin(angle) + window.innerHeight / 2,
+  };
 }
 
 export function createClientNodeIfNotExist(
@@ -127,7 +130,7 @@ export function createClientNodeIfNotExist(
   });
 }
 
-function handleDisconnect(message: z.infer<typeof ClientIdMessage>) {
+function handleDisconnect(message: z.infer<typeof ClientMessage>) {
   const { clientId } = message;
 
   if (clientId.includes(CLIENT_ID_PREFIX)) return;
@@ -141,7 +144,7 @@ function handleDisconnect(message: z.infer<typeof ClientIdMessage>) {
   return { nodes, links };
 }
 
-function handleConnect(message: z.infer<typeof ClientIdMessage>) {
+function handleConnect(message: z.infer<typeof ClientMessage>) {
   const { clientId } = message;
   if (clientId.includes(CLIENT_ID_PREFIX)) return;
   createClientNodeIfNotExist(clientId, nodes);
@@ -189,14 +192,14 @@ function getPathFromBrokerToNodeId(nodeId: string, links: SimulationLink[]) {
   return nodeIds;
 }
 
-function findEdges(links: SimulationLink[]) {
+function findLeafNodes(links: SimulationLink[]) {
   const sources = new Set(
     links.map(({ source }) => (source as SimulationNode).id),
   );
-  const edges = links.filter(
+
+  return links.filter(
     ({ target }) => !sources.has((target as SimulationNode).id),
   );
-  return edges;
 }
 
 function handlePublish(message: z.infer<typeof TopicMessage>) {
@@ -213,30 +216,27 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   });
   createPathNodesIfNotExist(topic, links, nodes);
 
-  if (
-    nodes.length !== currentNodesLength ||
-    links.length !== currentLinksLength
-  ) {
-    updateSvg(links, nodes);
-  }
-
   const animationId = generateUUID();
   animations.set(animationId, [clientId, MQTT_BROKER_NODE_ID]);
   animationCallbacks.set(animationId, () => {
     const linksInTopic = links.filter((link) => link.topic === topic);
-    const edges = findEdges(linksInTopic);
+    const leafes = findLeafNodes(linksInTopic);
 
-    edges
+    leafes
       .map((link) => {
         return (link.target as SimulationNode).id;
       })
-      .forEach((edgeId) => {
+      .forEach((leafId) => {
         animations.set(generateUUID(), [
           MQTT_BROKER_NODE_ID,
-          ...getPathFromBrokerToNodeId(edgeId, linksInTopic),
+          ...getPathFromBrokerToNodeId(leafId, linksInTopic),
         ]);
       });
   });
+
+  return (
+    nodes.length !== currentNodesLength || links.length !== currentLinksLength
+  );
 }
 
 const keyHandlers = new Map<string, Function>();
@@ -251,22 +251,36 @@ function addKeyboardHandler(
 
   const li = document.createElement("li");
   li.ariaLabel = description;
+  li.role = "button";
+  li.tabIndex = 0;
+  li.dataset.trigger = key;
   li.innerHTML = description.replace(key, `<span>${key}</span>`);
+  li.onclick = () => callback();
   hotkeys.appendChild(li);
 }
-
-// Press 'R' to reload page
-document.addEventListener("keydown", (event) => {
-  keyHandlers.get(event.key)?.();
-});
 
 addKeyboardHandler("c", "clear graph", fetchConnections);
 addKeyboardHandler("r", "reload page", () => window.location.reload());
 
-window.addEventListener("resize", () => {
-  svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+
+  switch (key) {
+    case "enter":
+      const trigger =
+        document.activeElement?.attributes.getNamedItem("data-trigger")?.value;
+      if (!trigger) return;
+
+      const handler = keyHandlers.get(trigger);
+      handler?.();
+      break;
+    default:
+      keyHandlers.get(key)?.();
+      break;
+  }
 });
 
 d3.select(window).on("resize", () => {
+  svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
   updateSvg(links, nodes);
 });

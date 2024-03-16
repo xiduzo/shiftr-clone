@@ -53,16 +53,21 @@ body {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
     color: var(--color-primary-lightest);
 }
 
-#hotkeys li:hover {
+#hotkeys li {
     cursor: pointer;
-    background-color: var(--color-primary-lightest);
-    color: var(--color-primary);
     padding: 8px;
     margin: -8px;
+    outline: none;
+}
+
+#hotkeys li:hover,
+#hotkeys li:focus {
+    background-color: var(--color-primary-lightest);
+    color: var(--color-primary);
 }
 
 #hotkeys li span {
