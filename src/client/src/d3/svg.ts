@@ -19,18 +19,15 @@ function addLinkStyles(
       const sourceIsMqttBroker = sourceNode.id === MQTT_BROKER_NODE_ID;
       const isToClient = (target as SimulationNode).isClient;
 
-      if (sourceIsMqttBroker && isToClient) return 0.2;
+      if (sourceIsMqttBroker && isToClient) return 0.1;
       if (isToClient) return 0.5;
 
       return 1;
     })
     .attr("stroke-dasharray", (d) => {
-      const sourceIsMqttBroker =
-        (d.source as SimulationNode).id === MQTT_BROKER_NODE_ID;
-      const isToIoTDevice = (d.target as SimulationNode).isClient;
+      const toClient = (d.target as SimulationNode).isClient;
 
-      if (sourceIsMqttBroker && isToIoTDevice) return "10,5";
-      if (isToIoTDevice) return "10,5";
+      if (toClient) return "10,5";
 
       return "0";
     });
@@ -152,8 +149,8 @@ export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
   node.exit().remove();
   addNodeStyles(newNodes);
 
-  const textGroup = d3.select<SVGGElement, undefined>("#labels");
-  const text = textGroup
+  const labelGroup = d3.select<SVGGElement, undefined>("#labels");
+  const text = labelGroup
     .selectAll<SVGTextElement, SimulationNode>("#labels text")
     .data(nodes, (d) => d.id);
 

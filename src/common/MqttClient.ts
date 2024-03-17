@@ -5,7 +5,10 @@ import { generateUUID } from "./utils";
 export class MqttClient {
   private client: MQTT.MqttClient | null = null;
 
-  constructor(brokerUrl: string, options?: MQTT.IClientOptions) {
+  constructor(
+    brokerUrl: string,
+    options?: Omit<MQTT.IClientOptions, "clientId">,
+  ) {
     MQTT.connectAsync(brokerUrl, {
       ...options,
       clientId:

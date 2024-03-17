@@ -75,7 +75,7 @@ body {
 }
 
 #host {
-    bottom: 5vh;
+    bottom: 2vh;
     text-align: center;
     width: 100vw;
     color: var(--color-primary-lightest);

@@ -99,11 +99,12 @@ function addImplicitSubscriptions(
       return link.topic?.includes("#") || link.topic?.includes("+");
     })
     .forEach((link) => {
-      const clientId = (link.target as SimulationNode).id;
       // step 2
+      const clientId = (link.target as SimulationNode).id;
       if (!link.topic) return;
 
       const originalTopic = link.topic;
+
       const topicRegex = link.topic
         .replace(/\//g, "\\/")
         .replace(/\+/g, "[^/]+")
@@ -122,6 +123,7 @@ function addImplicitSubscriptions(
           id: createLinkId(link.topic, clientId, link.topic),
           source: findOrCreateNode(target.id, nodes, link.topic),
           target: findOrCreateNode(clientId, nodes),
+          topic: link.topic,
         });
       });
     });
