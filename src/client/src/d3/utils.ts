@@ -48,7 +48,7 @@ export function createPathNodesIfNotExist(
 
   let pathWalked = "";
   paths.forEach((path, index, array) => {
-    const id = `${pathWalked}${pathWalked === "" ? "" : "_"}${path}`;
+    const id = `${pathWalked}${pathWalked === "" ? "" : "_SLASH_"}${path}`;
 
     if (index === 0) {
       pushIfNotExists(links, {
@@ -68,33 +68,64 @@ export function createPathNodesIfNotExist(
       });
     }
 
-    if (index === array.length - 1) {
-      links
-        .filter(({ source, target }) => {
-          const sourceIsWildcard =
-            (source as SimulationNode).id === id.replace(path, "+");
-          const targetIsClient = (target as SimulationNode).isClient;
-          return sourceIsWildcard && targetIsClient;
-        })
-        .forEach(({ target }) => {
-          pushIfNotExists(links, {
-            id: createLinkId(id, (target as SimulationNode).id, topic),
-            source: findOrCreateNode(id, nodes, path),
-            target: findOrCreateNode((target as SimulationNode).id, nodes),
-            topic,
-          });
-        });
-
-      if (clientId) {
-        pushIfNotExists(links, {
-          id: createLinkId(path, clientId, topic),
-          source: findOrCreateNode(id, nodes, path),
-          target: findOrCreateNode(clientId, nodes),
-          topic,
-        });
-      }
+    if (index === array.length - 1 && clientId) {
+      pushIfNotExists(links, {
+        id: createLinkId(path, clientId, topic),
+        source: findOrCreateNode(id, nodes, path),
+        target: findOrCreateNode(clientId, nodes),
+        topic,
+      });
     }
 
     pathWalked = id;
   });
+
+  addImplicitSubscriptions(links, nodes);
+}
+
+function addImplicitSubscriptions(
+  links: SimulationLink[],
+  nodes: SimulationNode[],
+) {
+  // step 1 get all clients subscribed to a wildcard
+  // step 2 get all topics that match the wildcard
+  // step 3 create links between topics and clients
+  links
+    .filter((link) => {
+      // step 1
+      const target = link.target as SimulationNode;
+      if (!target.isClient) return false;
+
+      return link.topic?.includes("#") || link.topic?.includes("+");
+    })
+    .forEach((link) => {
+      const clientId = (link.target as SimulationNode).id;
+      // step 2
+      console.log(clientId);
+      if (!link.topic) return;
+
+      const originalTopic = link.topic;
+      const topicRegex = link.topic
+        .replace(/\//g, "\\/")
+        .replace(/\+/g, "[^/]+")
+        .replace(/#/g, "\\S+$");
+
+      const regex = new RegExp(`^${topicRegex}$`);
+      links.forEach((link) => {
+        // step 3
+        const target = link.target as SimulationNode;
+        if (!link.topic) return false;
+        if (link.topic === originalTopic) return false;
+        if (link.topic !== target.id.replace(/_SLASH_/g, "/")) return false;
+        console.log(regex, link.topic, regex.test(link.topic));
+        if (!regex.test(link.topic)) return false;
+
+        console.log(link, clientId);
+        pushIfNotExists(links, {
+          id: createLinkId(link.topic, clientId, link.topic),
+          source: findOrCreateNode(target.id, nodes, link.topic),
+          target: findOrCreateNode(clientId, nodes),
+        });
+      });
+    });
 }
