@@ -27,13 +27,14 @@ export function runSimulation(
     d3
       .forceLink(links)
       .distance((link) => {
-        const sourceIsMqttBroker =
-          (link.source as SimulationNode).id === MQTT_BROKER_NODE_ID;
-        const isToIoTDevice = (link.target as SimulationNode).isClient;
+        const source = link.source as SimulationNode;
+        const target = link.target as SimulationNode;
+        const sourceIsMqttBroker = source.id === MQTT_BROKER_NODE_ID;
+        const isToIoTDevice = target.isClient;
 
-        const base = Math.min(window.innerHeight, window.innerWidth) / 3;
+        const base = Math.min(window.innerHeight, window.innerWidth) / 2;
         if (sourceIsMqttBroker && isToIoTDevice) return base;
-        if (sourceIsMqttBroker || isToIoTDevice) return base / 2;
+        if (sourceIsMqttBroker || isToIoTDevice) return base / 3;
         return base / 4;
       })
       .id((d) => (d as SimulationNode).id),

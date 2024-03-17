@@ -100,8 +100,7 @@ function messageHandler(topic: string, message: Buffer | Uint8Array) {
       updateSvg(links, nodes);
       break;
     case SHIFTR_CLONE_TOPIC.PUBLISH:
-      const hasNewNodesOrLinks = handlePublish(TopicMessage.parse(parsed));
-      if (hasNewNodesOrLinks) updateSvg(links, nodes);
+      handlePublish(TopicMessage.parse(parsed));
       break;
     default:
       console.log("default", topic, message);
@@ -216,6 +215,13 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   });
   createPathNodesIfNotExist(topic, links, nodes);
 
+  const hasChanged =
+    nodes.length !== currentNodesLength || links.length !== currentLinksLength;
+
+  if (hasChanged) updateSvg(links, nodes);
+
+  if (window.document.hidden) return;
+
   const animationId = generateUUID();
   animations.set(animationId, [clientId, MQTT_BROKER_NODE_ID]);
   animationCallbacks.set(animationId, () => {
@@ -233,10 +239,6 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
         ]);
       });
   });
-
-  return (
-    nodes.length !== currentNodesLength || links.length !== currentLinksLength
-  );
 }
 
 const keyHandlers = new Map<string, Function>();

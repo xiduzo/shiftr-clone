@@ -55,9 +55,6 @@ async function startTailing() {
           action === TRIGGERS.SUBACK
             ? await handleSubscribe(_clienId, _topic)
             : await handleUnsubscribe(_clienId, _topic);
-
-          _topic = null;
-          _clienId = null;
           break;
         case TRIGGERS.PUBLISH:
           if (_actionPrefix.toLowerCase() !== "received") return;
@@ -133,7 +130,6 @@ async function handlePublish(clientId: string, topic: string) {
 
 async function handleUnknowAction(line: string) {
   const words = line.split(" ");
-  // >>>>>>>>>>> 1710612040: Client arduino-feather-1 has exceeded timeout, disconnecting.
 
   if (
     line.includes("closed its connection") ||
