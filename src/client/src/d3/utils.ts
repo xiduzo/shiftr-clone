@@ -101,7 +101,6 @@ function addImplicitSubscriptions(
     .forEach((link) => {
       const clientId = (link.target as SimulationNode).id;
       // step 2
-      console.log(clientId);
       if (!link.topic) return;
 
       const originalTopic = link.topic;
@@ -117,10 +116,8 @@ function addImplicitSubscriptions(
         if (!link.topic) return false;
         if (link.topic === originalTopic) return false;
         if (link.topic !== target.id.replace(/_SLASH_/g, "/")) return false;
-        console.log(regex, link.topic, regex.test(link.topic));
         if (!regex.test(link.topic)) return false;
 
-        console.log(link, clientId);
         pushIfNotExists(links, {
           id: createLinkId(link.topic, clientId, link.topic),
           source: findOrCreateNode(target.id, nodes, link.topic),

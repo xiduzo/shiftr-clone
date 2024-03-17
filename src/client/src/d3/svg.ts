@@ -15,23 +15,10 @@ function addLinkStyles(
     .attr("id", (d) => d.id)
     .attr("class", "link")
     .attr("stroke-opacity", ({ source, target }) => {
-      const targetNode = target as SimulationNode;
       const sourceNode = source as SimulationNode;
       const sourceIsMqttBroker = sourceNode.id === MQTT_BROKER_NODE_ID;
       const isToClient = (target as SimulationNode).isClient;
-      const isWildcardTarget =
-        targetNode.id.includes("_SLASH_+") ||
-        targetNode.id.endsWith("_SLASH_#");
-      const isWildcardSource =
-        sourceNode.id.includes("_SLASH_+") ||
-        sourceNode.id.endsWith("_SLASH_#");
 
-      const isFinalWilcard =
-        sourceNode.id.endsWith("_SLASH_+") ||
-        sourceNode.id.endsWith("_SLASH_#");
-
-      if (isWildcardTarget) return 0.05;
-      if (isFinalWilcard && isToClient) return 0.05;
       if (sourceIsMqttBroker && isToClient) return 0.2;
       if (isToClient) return 0.5;
 
@@ -60,9 +47,8 @@ function addNodeStyles(
   nodeSelection
     .attr("id", ({ id }) => id)
     .attr("class", "node")
-    .attr("stroke-opacity", ({ isClient, id }) => {
+    .attr("stroke-opacity", ({ isClient }) => {
       if (isClient) return 0.5;
-      if (id.endsWith("_SLASH_+") || id.endsWith("_SLASH_#")) return 0.05;
 
       return 1;
     })
@@ -79,9 +65,8 @@ function addLabelStyles(
   >,
 ) {
   labelSelection
-    .attr("fill-opacity", ({ isClient, name }) => {
+    .attr("fill-opacity", ({ isClient }) => {
       if (isClient) return 0.5;
-      if (name === "+" || name === "#") return 0.05;
 
       return 1;
     })

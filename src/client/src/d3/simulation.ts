@@ -32,10 +32,11 @@ export function runSimulation(
         const sourceIsMqttBroker = source.id === MQTT_BROKER_NODE_ID;
         const isToIoTDevice = target.isClient;
 
-        const base = Math.min(window.innerHeight, window.innerWidth) / 2;
+        const base = Math.min(window.innerHeight, window.innerWidth) / 2.05;
         if (sourceIsMqttBroker && isToIoTDevice) return base;
         if (sourceIsMqttBroker || isToIoTDevice) return base / 3;
-        return base / 4;
+        const path = link.topic?.split("/") ?? [];
+        return base / (path.length + 1);
       })
       .id((d) => (d as SimulationNode).id),
   );

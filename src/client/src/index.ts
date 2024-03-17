@@ -155,14 +155,12 @@ function handleConnect(message: z.infer<typeof ClientMessage>) {
 }
 
 function handleSubscribe(message: z.infer<typeof TopicMessage>) {
-  // TODO: Handle subscribe on topic with `#` wildcards
   const { clientId, topic } = message;
   if (clientId.includes(CLIENT_ID_PREFIX)) return;
   createPathNodesIfNotExist(topic, links, nodes, clientId);
 }
 
 function handleUnsubscribe(message: z.infer<typeof TopicMessage>) {
-  // TODO: Handle unsubscribe on topic with `+` or `#` wildcards
   const { clientId, topic } = message;
   if (clientId.includes(CLIENT_ID_PREFIX)) return;
   links = links.filter((link) => {
@@ -202,7 +200,6 @@ function findLeafNodes(links: SimulationLink[]) {
 }
 
 function handlePublish(message: z.infer<typeof TopicMessage>) {
-  // TODO: Handle publish on topic with `+` and `#` wildcards
   const { clientId, topic } = message;
 
   const currentNodesLength = nodes.length;
