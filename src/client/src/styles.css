@@ -28,6 +28,7 @@ body {
     font-family: "Roboto", sans-serif;
     overflow: hidden;
     color: var(--color-secondary);
+    cursor: wait;
 }
 
 @media only screen and (max-width: 480px) {
@@ -62,12 +63,19 @@ body {
     padding: 8px;
     margin: -8px;
     outline: none;
+    transition: transform 0.2s;
 }
 
 #hotkeys li:hover,
 #hotkeys li:focus {
     background-color: var(--color-primary-lightest);
     color: var(--color-primary);
+}
+
+#hotkeys li.active,
+#hotkeys li:active {
+    background-color: var(--color-primary-lighter);
+    transform: scale(0.95);
 }
 
 #hotkeys li span {
@@ -86,10 +94,10 @@ svg text {
     z-index: -1;
 }
 
-svg circle:not(#MQTT_BROKER_CENTER):hover {
+svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):hover {
     cursor: grab;
 }
 
-svg circle:not(#MQTT_BROKER_CENTER):active {
+svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):active {
     cursor: grabbing;
 }

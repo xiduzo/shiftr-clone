@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { connections } from "./logReader";
 import http from "http";
+import { showLove } from "../../common/madeWithLove";
 
 /**
  * Simple server to init the FE with the connections
@@ -33,3 +34,5 @@ http
     res.end(json);
   })
   .listen(process.env.PORT);
+
+showLove();

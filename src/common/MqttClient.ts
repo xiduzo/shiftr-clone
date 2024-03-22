@@ -62,4 +62,8 @@ export class MqttClient {
     const client = await this.#getClient();
     client.subscribe(topicObject, options, callback);
   }
+
+  public get id() {
+    return this.client?.options.clientId;
+  }
 }

@@ -11,7 +11,7 @@ const simulation = d3
     d3.forceLink().id((d) => (d as SimulationNode).id),
   )
   .force("charge", d3.forceManyBody())
-  .force("node", d3.forceCollide(15));
+  .force("node", d3.forceCollide(2));
 
 export function runSimulation(
   links: SimulationLink[],

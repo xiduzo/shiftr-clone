@@ -1,5 +1,6 @@
 import { MqttClient } from "../../common/MqttClient";
 import { SHIFTR_CLONE_TOPIC } from "../../common/topics";
+import { showLove } from "../../common/madeWithLove";
 import * as d3 from "d3";
 import { drawSvg, updateSvg } from "./d3/svg";
 import { SimulationLink, SimulationNode } from "./d3/types";
@@ -34,6 +35,9 @@ fetchConnections();
 const client = new MqttClient(
   import.meta.env.VITE_CLIENT_MQTT_CONNECTION_STRING,
 );
+client.on("connect", () => {
+  console.log("Connected to MQTT broker");
+});
 client.on("message", messageHandler);
 client.subscribeAsync("SHIFTR_CLONE/#");
 
@@ -145,7 +149,10 @@ function handleDisconnect(message: z.infer<typeof ClientMessage>) {
 
 function handleConnect(message: z.infer<typeof ClientMessage>) {
   const { clientId } = message;
-  if (clientId.includes(CLIENT_ID_PREFIX)) return;
+  if (clientId.includes(CLIENT_ID_PREFIX)) {
+    if (clientId === client.id) window.document.body.style.cursor = "default";
+    return;
+  }
   createClientNodeIfNotExist(clientId, nodes);
   pushIfNotExists(links, {
     id: `${MQTT_BROKER_NODE_ID}_${clientId}`,
@@ -223,12 +230,10 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
   animations.set(animationId, [clientId, MQTT_BROKER_NODE_ID]);
   animationCallbacks.set(animationId, () => {
     const linksInTopic = links.filter((link) => link.topic === topic);
-    const leafes = findLeafNodes(linksInTopic);
+    const leafs = findLeafNodes(linksInTopic);
 
-    leafes
-      .map((link) => {
-        return (link.target as SimulationNode).id;
-      })
+    leafs
+      .map((link) => (link.target as SimulationNode).id)
       .forEach((leafId) => {
         animations.set(generateUUID(), [
           MQTT_BROKER_NODE_ID,
@@ -275,6 +280,11 @@ window.addEventListener("keydown", (event) => {
       break;
     default:
       keyHandlers.get(key)?.();
+      const element = document.querySelector(`[data-trigger="${key}"]`);
+      if (!element) return;
+
+      element.classList.add("active");
+      setTimeout(() => element.classList.remove("active"), 100);
       break;
   }
 });
@@ -283,3 +293,5 @@ d3.select(window).on("resize", () => {
   svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
   updateSvg(links, nodes);
 });
+
+showLove();
