@@ -1,6 +1,4 @@
-FROM nginx:alpine
-
-RUN apk add --update npm
+FROM node:20
 
 WORKDIR /usr/src/app
 
@@ -20,9 +18,5 @@ ARG VITE_CLIENT_HTTP_CONNECTIONS
 ENV VITE_CLIENT_MQTT_CONNECTION_STRING=$VITE_CLIENT_MQTT_CONNECTION_STRING
 ENV VITE_CLIENT_HTTP_CONNECTIONS=$VITE_CLIENT_HTTP_CONNECTIONS
 
-RUN npm run build:client
-
-RUN cp -r src/client/dist/* /usr/share/nginx/html
-RUN rm -rf src
-
-# Run process is started by nginx
+# Build the client
+CMD ["npm", "run", "build:client"]
