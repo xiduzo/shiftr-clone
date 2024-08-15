@@ -38,3 +38,13 @@ services:
     container_name: client
     volumes:
       - ./src/client/dist:/usr/src/app/src/client/dist
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "5173:80"
+    volumes:
+      - ./src/client/dist:/usr/share/nginx/html
+    depends_on:
+      - client

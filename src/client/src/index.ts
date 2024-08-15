@@ -1,19 +1,19 @@
-import { MqttClient } from "../../common/MqttClient";
-import { SHIFTR_CLONE_TOPIC } from "../../common/topics";
-import { showLove } from "../../common/madeWithLove";
 import * as d3 from "d3";
+import { z } from "zod";
+import { MqttClient } from "../../common/MqttClient";
+import { CLIENT_ID_PREFIX, MQTT_BROKER_NODE_ID } from "../../common/constants";
+import { showLove } from "../../common/madeWithLove";
+import { SHIFTR_CLONE_TOPIC } from "../../common/topics";
+import { generateUUID } from "../../common/utils";
+import { pushIfNotExists } from "./array";
+import { animate, animationCallbacks, animations } from "./d3/animation";
 import { drawSvg, updateSvg } from "./d3/svg";
 import { SimulationLink, SimulationNode } from "./d3/types";
-import { pushIfNotExists } from "./array";
 import {
   createLinkId,
   createPathNodesIfNotExist,
   findOrCreateNode,
 } from "./d3/utils";
-import { animate, animationCallbacks, animations } from "./d3/animation";
-import { generateUUID } from "../../common/utils";
-import { MQTT_BROKER_NODE_ID, CLIENT_ID_PREFIX } from "../../common/constants";
-import { z } from "zod";
 
 // localStorage.debug = "mqttjs*"; // For debugging MQTT client
 

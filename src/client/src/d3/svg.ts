@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import { SimulationLink, SimulationNode } from "./types";
-import { runSimulation } from "./simulation";
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
+import { runSimulation } from "./simulation";
+import { SimulationLink, SimulationNode } from "./types";
 
 function addLinkStyles(
   linkSelection: d3.Selection<
@@ -68,7 +68,7 @@ function addLabelStyles(
       return 1;
     })
     .attr("id", ({ id }) => id)
-    .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : name ?? id))
+    .text(({ id, name }) => (id === MQTT_BROKER_NODE_ID ? null : (name ?? id)))
     .attr("class", "label");
 }
 

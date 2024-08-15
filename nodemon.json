@@ -4,6 +4,6 @@
   "ignore": [],
   "exec": "npx ts-node ./src/server/src/index.ts",
   "env": {
-    "PORT": "8081"
+    "PORT": "9999"
   }
 }

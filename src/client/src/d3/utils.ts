@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import { SimulationLink, SimulationNode } from "./types";
-import { pushIfNotExists } from "../array";
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
+import { pushIfNotExists } from "../array";
+import { SimulationLink, SimulationNode } from "./types";
 
 export function createLinkId(source: string, target: string, topic: string) {
   return `FROM_${source}_TO_${target}_ON_${topic}`;

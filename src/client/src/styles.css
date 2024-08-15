@@ -1,103 +1,103 @@
 :root {
-    --color-primary: #193f52;
-    --color-primary-dark: #16394a;
-    --color-primary-darker: #153646;
-    --color-primary-darkest: #112c39;
-    --color-primary-light: #1b455a;
-    --color-primary-lighter: #1d485e;
-    --color-primary-lightest: #20526b;
-    --color-secondary: #81cbdf;
-    --color-secondary-dark: #65bfd8;
-    --color-secondary-darker: #57bad4;
-    --color-secondary-darkest: #32a5c4;
-    --color-secondary-light: #9dd7e6;
-    --color-secondary-lighter: #abdcea;
-    --color-secondary-lightest: #d5eef4;
+  --color-primary: #193f52;
+  --color-primary-dark: #16394a;
+  --color-primary-darker: #153646;
+  --color-primary-darkest: #112c39;
+  --color-primary-light: #1b455a;
+  --color-primary-lighter: #1d485e;
+  --color-primary-lightest: #20526b;
+  --color-secondary: #81cbdf;
+  --color-secondary-dark: #65bfd8;
+  --color-secondary-darker: #57bad4;
+  --color-secondary-darkest: #32a5c4;
+  --color-secondary-light: #9dd7e6;
+  --color-secondary-lighter: #abdcea;
+  --color-secondary-lightest: #d5eef4;
 }
 
 * {
-    padding: 0;
-    margin: 0;
+  padding: 0;
+  margin: 0;
 }
 
 body {
-    background-color: var(--color-primary);
-    width: 100vw;
-    height: 100vh;
-    font-size: 26px;
-    font-family: "Roboto", sans-serif;
-    overflow: hidden;
-    color: var(--color-secondary);
-    cursor: wait;
+  background-color: var(--color-primary);
+  width: 100vw;
+  height: 100vh;
+  font-size: 26px;
+  font-family: "Roboto", sans-serif;
+  overflow: hidden;
+  color: var(--color-secondary);
+  cursor: wait;
 }
 
 @media only screen and (max-width: 480px) {
-    body {
-        font-size: 18px;
-    }
+  body {
+    font-size: 18px;
+  }
 }
 
 @media only screen and (max-width: 960px) {
-    body {
-        font-size: 22px;
-    }
+  body {
+    font-size: 22px;
+  }
 }
 
 #chart,
 #hotkeys,
 #host {
-    position: absolute;
+  position: absolute;
 }
 
 #hotkeys {
-    padding: 16px;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    color: var(--color-primary-lightest);
+  padding: 16px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--color-primary-lightest);
 }
 
 #hotkeys li {
-    cursor: pointer;
-    padding: 8px;
-    margin: -8px;
-    outline: none;
-    transition: transform 0.2s;
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  outline: none;
+  transition: transform 0.2s;
 }
 
 #hotkeys li:hover,
 #hotkeys li:focus {
-    background-color: var(--color-primary-lightest);
-    color: var(--color-primary);
+  background-color: var(--color-primary-lightest);
+  color: var(--color-primary);
 }
 
 #hotkeys li.active,
 #hotkeys li:active {
-    background-color: var(--color-primary-lighter);
-    transform: scale(0.95);
+  background-color: var(--color-primary-lighter);
+  transform: scale(0.95);
 }
 
 #hotkeys li span {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 #host {
-    bottom: 2vh;
-    text-align: center;
-    width: 100vw;
-    color: var(--color-primary-lightest);
+  bottom: 2vh;
+  text-align: center;
+  width: 100vw;
+  color: var(--color-primary-lightest);
 }
 
 svg text {
-    user-select: none;
-    z-index: -1;
+  user-select: none;
+  z-index: -1;
 }
 
 svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):hover {
-    cursor: grab;
+  cursor: grab;
 }
 
 svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):active {
-    cursor: grabbing;
+  cursor: grabbing;
 }

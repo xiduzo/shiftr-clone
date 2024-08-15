@@ -1,8 +1,8 @@
-import { SimulationLink, SimulationNode } from "./types";
 import * as d3 from "d3";
+import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 import { dragended, dragged, dragstarted } from "./dragHandlers";
 import { tick } from "./tick";
-import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
+import { SimulationLink, SimulationNode } from "./types";
 
 const simulation = d3
   .forceSimulation()
