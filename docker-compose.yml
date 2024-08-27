@@ -2,6 +2,7 @@ version: "3"
 
 services:
   mosquitto:
+    restart: unless-stopped
     image: eclipse-mosquitto:latest
     container_name: mosquitto
     ports:
@@ -13,6 +14,7 @@ services:
       - ./mosquitto/log:/mosquitto/log
 
   server:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: src/server/Dockerfile
@@ -40,6 +42,7 @@ services:
       - ./src/client/dist:/usr/src/app/src/client/dist
 
   nginx:
+    restart: unless-stopped
     image: nginx:latest
     container_name: nginx
     ports:
