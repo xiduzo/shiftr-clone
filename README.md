@@ -1,3 +1,5 @@
+This is a poor-mans self-hosted version of [shiftr.io](https://www.shiftr.io/)
+
 # Dev
 
 ## Pre-requisites
