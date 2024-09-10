@@ -1,4 +1,4 @@
-import { SimulationLink, SimulationNode } from "./types";
+import { MqttEdge, MqttNode } from "./types";
 
 function getAttr(
   source: string | number | d3.SimulationNodeDatum,
@@ -11,9 +11,9 @@ function getAttr(
 }
 
 export function tick(
-  link: d3.Selection<SVGLineElement, SimulationLink, SVGElement, undefined>,
-  node: d3.Selection<SVGCircleElement, SimulationNode, SVGElement, undefined>,
-  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>,
+  link: d3.Selection<SVGLineElement, MqttEdge, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, MqttNode, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, MqttNode, SVGElement, undefined>,
 ) {
   node
     .attr("cx", ({ x }) => {

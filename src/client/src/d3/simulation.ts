@@ -2,23 +2,23 @@ import * as d3 from "d3";
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 import { dragended, dragged, dragstarted } from "./dragHandlers";
 import { tick } from "./tick";
-import { SimulationLink, SimulationNode } from "./types";
+import { MqttEdge, MqttNode } from "./types";
 
 const simulation = d3
   .forceSimulation()
   .force(
     "link",
-    d3.forceLink().id((d) => (d as SimulationNode).id),
+    d3.forceLink().id((d) => (d as MqttNode).id),
   )
   .force("charge", d3.forceManyBody())
   .force("node", d3.forceCollide(2));
 
 export function runSimulation(
-  links: SimulationLink[],
-  nodes: SimulationNode[],
-  link: d3.Selection<SVGLineElement, SimulationLink, SVGElement, undefined>,
-  node: d3.Selection<SVGCircleElement, SimulationNode, SVGElement, undefined>,
-  text: d3.Selection<SVGTextElement, SimulationNode, SVGElement, undefined>,
+  links: MqttEdge[],
+  nodes: MqttNode[],
+  link: d3.Selection<SVGLineElement, MqttEdge, SVGElement, undefined>,
+  node: d3.Selection<SVGCircleElement, MqttNode, SVGElement, undefined>,
+  text: d3.Selection<SVGTextElement, MqttNode, SVGElement, undefined>,
 ) {
   // Update simulation's links and nodes
   simulation.nodes(nodes);
@@ -27,8 +27,8 @@ export function runSimulation(
     d3
       .forceLink(links)
       .distance((link) => {
-        const source = link.source as SimulationNode;
-        const target = link.target as SimulationNode;
+        const source = link.source as MqttNode;
+        const target = link.target as MqttNode;
         const sourceIsMqttBroker = source.id === MQTT_BROKER_NODE_ID;
         const isToIoTDevice = target.isClient;
 
@@ -38,7 +38,7 @@ export function runSimulation(
         const path = link.topic?.split("/") ?? [];
         return base / (path.length + 1);
       })
-      .id((d) => (d as SimulationNode).id),
+      .id((d) => (d as MqttNode).id),
   );
 
   // Start the simulation

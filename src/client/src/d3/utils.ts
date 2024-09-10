@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
-import { pushIfNotExists } from "../array";
-import { SimulationLink, SimulationNode } from "./types";
+import { Store } from "./store";
+import { MqttNode } from "./types";
 
 export function createLinkId(source: string, target: string, topic: string) {
   return `FROM_${source}_TO_${target}_ON_${topic}`;
@@ -20,30 +20,40 @@ export function getNodePosition(nodeId: string) {
   }
 }
 
-export function findOrCreateNode(
-  id: string,
-  nodes: SimulationNode[],
-  name?: string,
-) {
-  const item = nodes.find((node) => node.id === id);
+export function findOrCreateNode(id: string, name?: string) {
+  const item = Store.getNodes().find((node) => node.id === id);
 
-  return (
-    item ??
-    pushIfNotExists(nodes, {
-      id,
-      name,
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-    })
-  );
+  if (item) {
+    return item;
+  }
+
+  return Store.addNode({
+    id,
+    name,
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  });
 }
 
-export function createPathNodesIfNotExist(
-  topic: string,
-  links: SimulationLink[],
-  nodes: SimulationNode[],
-  clientId?: string,
-) {
+export function getRandomCoordinatesOnCircle(radius = 400) {
+  const angle = Math.random() * 2 * Math.PI;
+
+  return {
+    x: radius * Math.cos(angle) + window.innerWidth / 2,
+    y: radius * Math.sin(angle) + window.innerHeight / 2,
+  };
+}
+
+export function createClientNodeIfNotExist(clientId: string) {
+  return Store.addNode({
+    id: clientId,
+    name: clientId,
+    isClient: true,
+    ...getRandomCoordinatesOnCircle(),
+  });
+}
+
+export function createPathNodesIfNotExist(topic: string, clientId?: string) {
   const paths = topic.split("/");
 
   let pathWalked = "";
@@ -51,28 +61,28 @@ export function createPathNodesIfNotExist(
     const id = `${pathWalked}${pathWalked === "" ? "" : "_SLASH_"}${path}`;
 
     if (index === 0) {
-      pushIfNotExists(links, {
+      Store.addEdge({
         id: createLinkId(MQTT_BROKER_NODE_ID, path, topic),
-        source: findOrCreateNode(MQTT_BROKER_NODE_ID, nodes),
-        target: findOrCreateNode(id, nodes, path),
+        source: findOrCreateNode(MQTT_BROKER_NODE_ID),
+        target: findOrCreateNode(id, path),
         topic,
       });
     }
 
     if (index > 0) {
-      pushIfNotExists(links, {
+      Store.addEdge({
         id: createLinkId(array.at(index - 1)!, path, topic),
-        source: findOrCreateNode(pathWalked, nodes, path),
-        target: findOrCreateNode(id, nodes, path),
+        source: findOrCreateNode(pathWalked, path),
+        target: findOrCreateNode(id, path),
         topic,
       });
     }
 
     if (index === array.length - 1 && clientId) {
-      pushIfNotExists(links, {
+      Store.addEdge({
         id: createLinkId(path, clientId, topic),
-        source: findOrCreateNode(id, nodes, path),
-        target: findOrCreateNode(clientId, nodes),
+        source: findOrCreateNode(id, path),
+        target: findOrCreateNode(clientId),
         topic,
       });
     }
@@ -80,50 +90,47 @@ export function createPathNodesIfNotExist(
     pathWalked = id;
   });
 
-  addImplicitSubscriptions(links, nodes);
+  addImplicitSubscriptions();
 }
 
-function addImplicitSubscriptions(
-  links: SimulationLink[],
-  nodes: SimulationNode[],
-) {
+function addImplicitSubscriptions() {
   // step 1 get all clients subscribed to a wildcard
   // step 2 get all topics that match the wildcard
   // step 3 create links between topics and clients
-  links
-    .filter((link) => {
+  Store.getEdges()
+    .filter((edge) => {
       // step 1
-      const target = link.target as SimulationNode;
+      const target = edge.target as MqttNode;
       if (!target.isClient) return false;
 
-      return link.topic?.includes("#") || link.topic?.includes("+");
+      return edge.topic?.includes("#") || edge.topic?.includes("+");
     })
-    .forEach((link) => {
+    .forEach((edge) => {
       // step 2
-      const clientId = (link.target as SimulationNode).id;
-      if (!link.topic) return;
+      const clientId = (edge.target as MqttNode).id;
+      if (!edge.topic) return;
 
-      const originalTopic = link.topic;
+      const originalTopic = edge.topic;
 
-      const topicRegex = link.topic
+      const topicRegex = edge.topic
         .replace(/\//g, "\\/")
         .replace(/\+/g, "[^/]+")
         .replace(/#/g, "\\S+$");
 
       const regex = new RegExp(`^${topicRegex}$`);
-      links.forEach((link) => {
+      Store.getEdges().forEach((edge) => {
         // step 3
-        const target = link.target as SimulationNode;
-        if (!link.topic) return false;
-        if (link.topic === originalTopic) return false;
-        if (link.topic !== target.id.replace(/_SLASH_/g, "/")) return false;
-        if (!regex.test(link.topic)) return false;
+        const target = edge.target as MqttNode;
+        if (!edge.topic) return false;
+        if (edge.topic === originalTopic) return false;
+        if (edge.topic !== target.id.replace(/_SLASH_/g, "/")) return false;
+        if (!regex.test(edge.topic)) return false;
 
-        pushIfNotExists(links, {
-          id: createLinkId(link.topic, clientId, link.topic),
-          source: findOrCreateNode(target.id, nodes, link.topic),
-          target: findOrCreateNode(clientId, nodes),
-          topic: link.topic,
+        Store.addEdge({
+          id: createLinkId(edge.topic, clientId, edge.topic),
+          source: findOrCreateNode(target.id, edge.topic),
+          target: findOrCreateNode(clientId),
+          topic: edge.topic,
         });
       });
     });

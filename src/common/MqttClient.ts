@@ -33,12 +33,15 @@ export class MqttClient {
     });
   }
 
-  public async on(
-    item: Parameters<typeof MQTT.MqttClient.prototype.on>[0],
-    callback: Parameters<typeof MQTT.MqttClient.prototype.on>[1],
-  ) {
+  public async on(...args: Parameters<typeof MQTT.MqttClient.prototype.on>) {
     const client = await this.#getClient();
-    client.on(item, callback);
+    const [event, callback] = args;
+    client.on(...args);
+
+    if (event === "connect" && client.connected) {
+      callback(null as never, {} as Buffer, {} as MQTT.IPublishPacket);
+    }
+
     return this;
   }
 

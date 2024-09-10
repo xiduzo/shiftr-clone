@@ -1,23 +1,19 @@
 import * as d3 from "d3";
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 import { runSimulation } from "./simulation";
-import { SimulationLink, SimulationNode } from "./types";
+import { Store } from "./store";
+import { MqttEdge, MqttNode } from "./types";
 
 function addLinkStyles(
-  linkSelection: d3.Selection<
-    SVGLineElement,
-    SimulationLink,
-    SVGGElement,
-    undefined
-  >,
+  linkSelection: d3.Selection<SVGLineElement, MqttEdge, SVGGElement, undefined>,
 ) {
   linkSelection
     .attr("id", (d) => d.id)
     .attr("class", "link")
     .attr("stroke-opacity", ({ source, target }) => {
-      const sourceNode = source as SimulationNode;
+      const sourceNode = source as MqttNode;
       const sourceIsMqttBroker = sourceNode.id === MQTT_BROKER_NODE_ID;
-      const isToClient = (target as SimulationNode).isClient;
+      const isToClient = (target as MqttNode).isClient;
 
       if (sourceIsMqttBroker && isToClient) return 0.1;
       if (isToClient) return 0.5;
@@ -25,7 +21,7 @@ function addLinkStyles(
       return 1;
     })
     .attr("stroke-dasharray", (d) => {
-      const toClient = (d.target as SimulationNode).isClient;
+      const toClient = (d.target as MqttNode).isClient;
 
       if (toClient) return "10,5";
 
@@ -36,7 +32,7 @@ function addLinkStyles(
 function addNodeStyles(
   nodeSelection: d3.Selection<
     SVGCircleElement,
-    SimulationNode,
+    MqttNode,
     SVGGElement,
     undefined
   >,
@@ -56,7 +52,7 @@ function addNodeStyles(
 function addLabelStyles(
   labelSelection: d3.Selection<
     SVGTextElement,
-    SimulationNode,
+    MqttNode,
     SVGGElement,
     undefined
   >,
@@ -74,9 +70,10 @@ function addLabelStyles(
 
 export function drawSvg(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
-  links: SimulationLink[],
-  nodes: SimulationNode[],
 ) {
+  const edges = Store.getEdges();
+  const nodes = Store.getNodes();
+
   const style = getComputedStyle(document.documentElement);
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -87,8 +84,8 @@ export function drawSvg(
     .attr("stroke-width", 1.5)
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
     .attr("id", "links")
-    .selectAll<SVGLineElement, SimulationLink>("g")
-    .data(links)
+    .selectAll<SVGLineElement, MqttEdge>("g")
+    .data(edges)
     .join("line");
   addLinkStyles(link);
 
@@ -97,7 +94,7 @@ export function drawSvg(
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
     .attr("fill", style.getPropertyValue("--color-primary"))
     .attr("id", "nodes")
-    .selectAll<SVGCircleElement, SimulationNode>("g")
+    .selectAll<SVGCircleElement, MqttNode>("g")
     .data(nodes)
     .join("circle");
   addNodeStyles(node);
@@ -111,7 +108,7 @@ export function drawSvg(
     .attr("stroke", style.getPropertyValue("--color-primary"))
     .attr("paint-order", "stroke")
     .attr("stroke-width", 4)
-    .selectAll<SVGTextElement, SimulationNode>("g")
+    .selectAll<SVGTextElement, MqttNode>("g")
     .data(nodes)
     .join("text");
   addLabelStyles(text);
@@ -121,7 +118,7 @@ export function drawSvg(
     .attr("class", "packets")
     .attr("fill", style.getPropertyValue("--color-secondary-lightest"));
 
-  runSimulation(links, nodes, link, node, text);
+  runSimulation(edges, nodes, link, node, text);
 
   const svgNode = svg.node();
   const chart = document.querySelector<HTMLDivElement>("#chart");
@@ -130,11 +127,14 @@ export function drawSvg(
   chart.append(svgNode);
 }
 
-export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
+export function updateSvg() {
+  const edges = Store.getEdges();
+  const nodes = Store.getNodes();
+
   const linkGroup = d3.select<SVGGElement, undefined>("#links");
   const link = linkGroup
-    .selectAll<SVGLineElement, SimulationLink>("#links line")
-    .data(links);
+    .selectAll<SVGLineElement, MqttEdge>("#links line")
+    .data(edges);
 
   const newLinks = link.enter().append("line").merge(link);
   link.exit().remove();
@@ -142,7 +142,7 @@ export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
 
   const nodeGroup = d3.select<SVGGElement, undefined>("#nodes");
   const node = nodeGroup
-    .selectAll<SVGCircleElement, SimulationNode>("#nodes circle")
+    .selectAll<SVGCircleElement, MqttNode>("#nodes circle")
     .data(nodes);
 
   const newNodes = node.enter().append("circle").merge(node);
@@ -151,12 +151,12 @@ export function updateSvg(links: SimulationLink[], nodes: SimulationNode[]) {
 
   const labelGroup = d3.select<SVGGElement, undefined>("#labels");
   const text = labelGroup
-    .selectAll<SVGTextElement, SimulationNode>("#labels text")
+    .selectAll<SVGTextElement, MqttNode>("#labels text")
     .data(nodes, (d) => d.id);
 
   const newTexts = text.enter().append("text").merge(text);
   text.exit().remove();
   addLabelStyles(newTexts);
 
-  runSimulation(links, nodes, newLinks, newNodes, newTexts);
+  runSimulation(edges, nodes, newLinks, newNodes, newTexts);
 }
