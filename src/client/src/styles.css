@@ -101,3 +101,48 @@ svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):hover {
 svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):active {
   cursor: grabbing;
 }
+
+::backdrop {
+  background-image: linear-gradient(
+    45deg,
+    var(--color-primary-darker),
+    var(--color-primary-darkest)
+  );
+  opacity: 0.8;
+}
+
+dialog {
+  background: var(--color-primary);
+  outline: none;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 0 16px 0 var(--color-primary-darkest);
+  min-width: 320px;
+  color: white;
+  align-self: center;
+  justify-self: center;
+}
+
+button {
+  display: block;
+  width: 100%;
+  height: 48px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-primary-lightest);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--color-primary-lightest);
+  color: var(--color-primary);
+}
+
+button:active {
+  background: var(--color-primary-lighter);
+  transform: scale(0.95);
+}

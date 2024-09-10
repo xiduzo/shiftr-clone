@@ -11,6 +11,8 @@ let globalNodes: MqttNode[] = [
   },
 ];
 let globalEdges: MqttEdge[] = [];
+let globalIgnoredNodeIds: Set<string> = new Set();
+globalIgnoredNodeIds.add("homeassistant");
 
 export class Store {
   static getNodes() {
@@ -40,5 +42,24 @@ export class Store {
 
   static setEdges(edges: MqttEdge[]) {
     globalEdges = edges;
+  }
+
+  static addIgnoredNodeId(id: string) {
+    globalIgnoredNodeIds.add(id);
+  }
+
+  static removeIgnoredNodeId(id: string) {
+    globalIgnoredNodeIds.delete(id);
+  }
+
+  static isIngoredNodeId(id: string) {
+    // Should ignore if the id is the start id of any item in the ignore list
+    return Array.from(globalIgnoredNodeIds).some((ignoredId) =>
+      id.startsWith(ignoredId),
+    );
+  }
+
+  static getIgnoredNodeIds() {
+    return globalIgnoredNodeIds;
   }
 }

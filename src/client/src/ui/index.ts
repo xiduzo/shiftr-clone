@@ -1,3 +1,7 @@
+import { Store } from "../d3/store";
+import { updateSvg } from "../d3/svg";
+import { MqttNode } from "../d3/types";
+
 const keyHandlers = new Map<string, Function>();
 
 export function addKeyboardHandler(
@@ -39,6 +43,15 @@ window.addEventListener("keydown", (event) => {
       keyHandlers.get(trigger)?.();
       pressElement(activeElement);
       break;
+    case "h":
+    case "u":
+      const dialog = document.querySelector("dialog");
+      console.log(dialog);
+      if (!dialog) {
+        return;
+      }
+      toggleIgnoreNode(dialog.id);
+      break;
     default:
       keyHandlers.get(key)?.();
       const element = document.querySelector(`[data-trigger="${key}"]`);
@@ -48,3 +61,39 @@ window.addEventListener("keydown", (event) => {
       break;
   }
 });
+
+function toggleIgnoreNode(nodeId: string) {
+  const dialog = document.querySelector("dialog");
+
+  if (Store.isIngoredNodeId(nodeId)) {
+    Store.removeIgnoredNodeId(nodeId);
+  } else {
+    Store.addIgnoredNodeId(nodeId);
+  }
+
+  updateSvg();
+  console.log(dialog);
+  dialog?.close();
+  dialog?.remove();
+}
+
+export function showNodePopup(_event: PointerEvent, node: MqttNode) {
+  let topic = node.id.replace(/_SLASH_/g, "/");
+
+  const dialog = document.createElement("dialog");
+  dialog.id = node.id;
+
+  const ignore = document.createElement("button");
+  ignore.innerHTML = Store.isIngoredNodeId(node.id)
+    ? `<u>U</u>n-hide ${topic}`
+    : `<u>H</u>ide ${topic}`;
+  ignore.onclick = () => {
+    toggleIgnoreNode(node.id);
+  };
+
+  dialog.appendChild(ignore);
+
+  document.body.appendChild(dialog);
+  dialog.showModal();
+  dialog.onclose = () => dialog.remove();
+}
