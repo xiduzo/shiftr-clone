@@ -137,11 +137,8 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
       .map((leaf) => (leaf.target as MqttNode).id)
       .forEach((leafId) => {
         const path = getPathFromBrokerToNodeId(leafId, edgesInTopic)
-        const ignoredNodeIds = Array.from(Store.getIgnoredNodeIds());
-        const pathCutOff = findLowestIndex(path, ignoredNodeIds) ?? path.length;
 
-        console.log("path", path, Store.getIgnoredNodeIds());
-        animations.set(generateUUID(), [MQTT_BROKER_NODE_ID, ...path.slice(0, pathCutOff)]);
+        animations.set(generateUUID(), [MQTT_BROKER_NODE_ID, ...path]);
       });
   });
 }
@@ -169,13 +166,4 @@ function getPathFromBrokerToNodeId(nodeId: string, edges: MqttEdge[]) {
   }
 
   return nodeIds;
-}
-
-function findLowestIndex(array1: string[], array2: string[]) {
-    for (let index = 0; index < array1.length; index++) {
-        if (array2.includes(array1[index])) {
-            return index;
-        }
-    }
-    return null;
 }

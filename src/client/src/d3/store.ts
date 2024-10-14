@@ -12,7 +12,6 @@ let globalNodes: MqttNode[] = [
 ];
 let globalEdges: MqttEdge[] = [];
 let globalIgnoredNodeIds: Set<string> = new Set();
-globalIgnoredNodeIds.add("homeassistant");
 
 export class Store {
   static getNodes() {
@@ -60,6 +59,6 @@ export class Store {
   }
 
   static getIgnoredNodeIds() {
-    return globalIgnoredNodeIds;
+    return Array.from(globalIgnoredNodeIds);
   }
 }

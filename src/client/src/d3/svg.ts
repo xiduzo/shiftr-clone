@@ -8,7 +8,7 @@ enum Opacity {
   Full = 1,
   Shallow = 0.5,
   Ghost = 0.2,
-  NearlyInvisible = 0.1,
+  NearlyInvisible = 0.025,
 }
 
 function addEdgeStyles(
@@ -23,6 +23,10 @@ function addEdgeStyles(
 
       const sourceIsMqttBroker = sourceNode.id === MQTT_BROKER_NODE_ID;
       const isToClient = targetNode.isClient;
+
+      if(Store.getIgnoredNodeIds().some(ignoredId => sourceNode.id.startsWith(ignoredId) || targetNode.id.startsWith(ignoredId))) {
+        return Opacity.NearlyInvisible;
+      }
 
       if (sourceIsMqttBroker && isToClient) return Opacity.Ghost;
       if (isToClient) return Opacity.Shallow;
@@ -49,7 +53,11 @@ function addNodeStyles(
   nodeSelection
     .attr("data-topic", ({ id }) => id)
     .attr("class", "node")
-    .attr("stroke-opacity", ({ isClient }) => {
+    .attr("stroke-opacity", ({ id, isClient }) => {
+      if(Store.getIgnoredNodeIds().some(ignoredId => id.startsWith(ignoredId))) {
+        return Opacity.NearlyInvisible;
+      }
+
       if (isClient) return Opacity.Shallow;
 
       return Opacity.Full;
@@ -67,7 +75,11 @@ function addLabelStyles(
   >,
 ) {
   labelSelection
-    .attr("fill-opacity", ({ isClient }) => {
+    .attr("fill-opacity", ({ id, isClient }) => {
+      if(Store.getIgnoredNodeIds().some(ignoredId => id.startsWith(ignoredId))) {
+        return Opacity.NearlyInvisible;
+      }
+
       if (isClient) return Opacity.Shallow;
 
       return Opacity.Full;
@@ -77,37 +89,11 @@ function addLabelStyles(
     .attr("class", "label");
 }
 
-function getFilteredEdges() {
-  const hiddenNodes = Array.from(Store.getIgnoredNodeIds());
-
-  return Store.getEdges().filter((edge) => {
-    const sourceNode = edge.source as MqttNode;
-    const targetNode = edge.target as MqttNode;
-
-    if (hiddenNodes.some(id => sourceNode.id.startsWith(id))) return false;
-    if (hiddenNodes.some(id => targetNode.id.startsWith(id))) return false;
-
-    return true;
-  });
-}
-
-function getFilteredNodes() {
-  const hiddenNodes = Array.from(Store.getIgnoredNodeIds());
-
-  return Store.getNodes().filter((node) => {
-    console.log(hiddenNodes, node.id)
-    if (hiddenNodes.some(id => node.id.startsWith(id))) return false;
-
-    return true;
-  });
-}
-
-
 export function drawSvg(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
 ) {
-  const edges = getFilteredEdges();
-  const nodes = getFilteredNodes();
+  const edges = Store.getEdges();
+  const nodes = Store.getNodes();
 
   const style = getComputedStyle(document.documentElement);
   const width = window.innerWidth;
@@ -163,8 +149,8 @@ export function drawSvg(
 }
 
 export function updateSvg() {
-  const edges = getFilteredEdges()
-  const nodes = getFilteredNodes();
+  const edges = Store.getEdges()
+  const nodes = Store.getNodes();
 
   const linkGroup = d3.select<SVGGElement, undefined>("#links");
   const link = linkGroup
