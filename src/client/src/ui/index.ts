@@ -1,8 +1,9 @@
+import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 import { Store } from "../d3/store";
 import { updateSvg } from "../d3/svg";
-import { MqttNode } from "../d3/types";
 
 const keyHandlers = new Map<string, Function>();
+let dialog: HTMLDialogElement | null = null;
 
 export function addKeyboardHandler(
   key: string,
@@ -29,42 +30,16 @@ function pressElement(element: Element) {
 }
 
 window.addEventListener("keydown", (event) => {
-  const key = event.key.toLowerCase();
+  const key = event.key?.toLowerCase();
 
-  switch (key) {
-    case "enter":
-      const activeElement = document.activeElement;
-      if (!activeElement) return;
+  keyHandlers.get(key)?.();
+  const element = document.querySelector(`[data-trigger="${key}"]`);
+  if (!element) return;
 
-      const trigger =
-        activeElement?.attributes.getNamedItem("data-trigger")?.value;
-      if (!trigger) return;
-
-      keyHandlers.get(trigger)?.();
-      pressElement(activeElement);
-      break;
-    case "h":
-    case "u":
-      const dialog = document.querySelector("dialog");
-      console.log(dialog);
-      if (!dialog) {
-        return;
-      }
-      toggleIgnoreNode(dialog.id);
-      break;
-    default:
-      keyHandlers.get(key)?.();
-      const element = document.querySelector(`[data-trigger="${key}"]`);
-      if (!element) return;
-
-      pressElement(element);
-      break;
-  }
+  pressElement(element);
 });
 
 function toggleIgnoreNode(nodeId: string) {
-  const dialog = document.querySelector("dialog");
-
   if (Store.isIngoredNodeId(nodeId)) {
     Store.removeIgnoredNodeId(nodeId);
   } else {
@@ -72,28 +47,94 @@ function toggleIgnoreNode(nodeId: string) {
   }
 
   updateSvg();
-  console.log(dialog);
-  dialog?.close();
-  dialog?.remove();
 }
 
-export function showNodePopup(_event: PointerEvent, node: MqttNode) {
-  let topic = node.id.replace(/_SLASH_/g, "/");
+export function showHiddenNodes() {
+  const currentDialog = document.querySelector("dialog");
+  if (currentDialog) return;
 
   const dialog = document.createElement("dialog");
-  dialog.id = node.id;
+  dialog.id = "hiddenNodes";
+  dialog.title = "Hidden nodes";
 
-  const ignore = document.createElement("button");
-  ignore.innerHTML = Store.isIngoredNodeId(node.id)
-    ? `<u>U</u>n-hide ${topic}`
-    : `<u>H</u>ide ${topic}`;
-  ignore.onclick = () => {
-    toggleIgnoreNode(node.id);
+  const title = document.createElement("h1");
+  title.innerHTML = dialog.title;
+  dialog.appendChild(title)
+
+  const close = document.createElement("button");
+  close.innerHTML = "x";
+  close.classList.add("close");
+  close.classList.add("secondary");
+  dialog.appendChild(close);
+  close.onclick = () => dialog.remove();
+
+  const ul = document.createElement("ul");
+
+  const ignoredNodeIds = Store.getIgnoredNodeIds();
+  ignoredNodeIds.forEach((nodeId) => {
+    const li = document.createElement("li");
+    li.innerHTML = nodeId;
+    li.onclick = () => {
+      toggleIgnoreNode(nodeId);
+      li.remove();
+      updateSvg();
+    };
+    ul.appendChild(li);
+  });
+
+  dialog.appendChild(ul);
+
+  const section = document.createElement("section");
+  section.style.display = "flex";
+  section.style.flexDirection = "column";
+  section.style.gap = "0.25rem";
+
+  const label = document.createElement("label");
+  label.innerHTML = "Node to ignore";
+  label.htmlFor = "ignore-node";
+  section.appendChild(label);
+
+  const input = document.createElement("input");
+  input.id = "ignore-node";
+  input.type = "search";
+  input.setAttribute('list', 'data-nodes');
+  input.placeholder = "/topic/subtopic, clientId, etc...";
+  section.appendChild(input);
+
+  dialog.append(section)
+  const dataList = document.createElement("datalist");
+  dataList.id = "data-nodes";
+
+  const nodes = Store.getNodes();
+  nodes.filter(node => node.id !== MQTT_BROKER_NODE_ID).forEach(node => {
+    const option = document.createElement("option");
+    option.value = node.id;
+    dataList.appendChild(option);
+  })
+
+  dialog.appendChild(dataList);
+
+  const button = document.createElement("button");
+  button.innerHTML = "Ignore node";
+  button.classList.add("secondary");
+  button.onclick = () => {
+    if(input.value === '') return;
+    toggleIgnoreNode(input.value);
+    const li = document.createElement("li");
+    li.innerHTML = input.value;
+    li.onclick = () => {
+      toggleIgnoreNode(input.value);
+      li.remove();
+      updateSvg();
+    };
+    ul.appendChild(li);
+    input.value = "";
+    updateSvg();
   };
+  dialog.appendChild(button);
 
-  dialog.appendChild(ignore);
 
   document.body.appendChild(dialog);
   dialog.showModal();
-  dialog.onclose = () => dialog.remove();
+  dialog.onclose = () => dialog?.remove();
 }

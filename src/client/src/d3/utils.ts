@@ -8,7 +8,7 @@ export function createLinkId(source: string, target: string, topic: string) {
 }
 
 export function getNodePosition(nodeId: string) {
-  const node = d3.select(`#nodes #${nodeId}`);
+  const node = d3.select(`#nodes [data-topic='${nodeId}']`);
 
   try {
     const x = +node.attr("cx");
@@ -58,7 +58,7 @@ export function createPathNodesIfNotExist(topic: string, clientId?: string) {
 
   let pathWalked = "";
   paths.forEach((path, index, array) => {
-    const id = `${pathWalked}${pathWalked === "" ? "" : "_SLASH_"}${path}`;
+    const id = `${pathWalked}${pathWalked === "" ? "" : "/"}${path}`;
 
     if (index === 0) {
       Store.addEdge({
@@ -123,7 +123,7 @@ function addImplicitSubscriptions() {
         const target = edge.target as MqttNode;
         if (!edge.topic) return false;
         if (edge.topic === originalTopic) return false;
-        if (edge.topic !== target.id.replace(/_SLASH_/g, "/")) return false;
+        if (edge.topic !== target.id) return false;
         if (!regex.test(edge.topic)) return false;
 
         Store.addEdge({

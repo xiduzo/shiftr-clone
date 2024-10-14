@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { clientId } from ".";
 import {
-  CLIENT_ID_PREFIX,
-  MQTT_BROKER_NODE_ID,
+    CLIENT_ID_PREFIX,
+    MQTT_BROKER_NODE_ID,
 } from "../../../common/constants";
 import { SHIFTR_CLONE_TOPIC } from "../../../common/topics";
 import { generateUUID } from "../../../common/utils";
@@ -11,10 +11,10 @@ import { Store } from "../d3/store";
 import { updateSvg } from "../d3/svg";
 import { MqttEdge, MqttNode } from "../d3/types";
 import {
-  createClientNodeIfNotExist,
-  createLinkId,
-  createPathNodesIfNotExist,
-  findOrCreateNode,
+    createClientNodeIfNotExist,
+    createLinkId,
+    createPathNodesIfNotExist,
+    findOrCreateNode,
 } from "../d3/utils";
 
 const Message = z.object({
@@ -136,10 +136,12 @@ function handlePublish(message: z.infer<typeof TopicMessage>) {
     leafs
       .map((leaf) => (leaf.target as MqttNode).id)
       .forEach((leafId) => {
-        animations.set(generateUUID(), [
-          MQTT_BROKER_NODE_ID,
-          ...getPathFromBrokerToNodeId(leafId, edgesInTopic),
-        ]);
+        const path = getPathFromBrokerToNodeId(leafId, edgesInTopic)
+        const ignoredNodeIds = Array.from(Store.getIgnoredNodeIds());
+        const pathCutOff = findLowestIndex(path, ignoredNodeIds) ?? path.length;
+
+        console.log("path", path, Store.getIgnoredNodeIds());
+        animations.set(generateUUID(), [MQTT_BROKER_NODE_ID, ...path.slice(0, pathCutOff)]);
       });
   });
 }
@@ -165,5 +167,15 @@ function getPathFromBrokerToNodeId(nodeId: string, edges: MqttEdge[]) {
       nodeIds.unshift(id);
     }
   }
+
   return nodeIds;
+}
+
+function findLowestIndex(array1: string[], array2: string[]) {
+    for (let index = 0; index < array1.length; index++) {
+        if (array2.includes(array1[index])) {
+            return index;
+        }
+    }
+    return null;
 }
