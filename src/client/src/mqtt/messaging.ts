@@ -37,7 +37,7 @@ export type PayloadMessage = z.infer<typeof PayloadMessage>;
 
 const disconnecting = new Map<string, NodeJS.Timeout>();
 
-const CLIENT_DISCONNECT_GRACE_PERIOD = 2000;
+const CLIENT_DISCONNECT_GRACE_PERIOD = 5000;
 
 export function handleMqttMessage(topic: string, message: Buffer | Uint8Array) {
   const parsed = JSON.parse(message.toString());

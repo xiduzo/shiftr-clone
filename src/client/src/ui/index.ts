@@ -161,6 +161,6 @@ export function addReceivedMessage(message: PayloadMessage) {
     <div class="clientId">${message.clientId}</div>
     <div class="message">${message.message}</div>
   `;
-  setTimeout(() => li.remove(), 15000);
+  setTimeout(() => li.remove(), 30000);
   messagesList.prepend(li);
 }
