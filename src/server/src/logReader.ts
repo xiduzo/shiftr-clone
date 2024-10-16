@@ -27,6 +27,8 @@ let _clienId: string | null;
 let _topic: string | null;
 
 const client = new MqttClient(process.env.SERVER_MQTT_CONNECTION_STRING!);
+
+client.subscribeAsync('#')
 export const connections = new Map<string, string[]>();
 
 async function startTailing() {
@@ -124,8 +126,30 @@ async function handleUnsubscribe(clientId: string, topic: string) {
   });
 }
 
+// <topic, clientId>
+// <topic, message>
+const toPublish = new Map<string, string>();
+
+// This is a hack to somehow try to match the messages from the log file
+// to the messages that are being sent to the client
+// TODO: look into https://mosquitto.org/man/mosquitto_sub-1.html
+client.on('message', async (topic, message) => {
+  if(topic.startsWith("SHIFTR_CLONE")) return
+
+  let loopTries = 1000;
+  while(!toPublish.get(topic) && loopTries-- > 0) {
+    await new Promise(resolve => setTimeout(resolve, 5));
+  }
+
+  const clientId = toPublish.get(topic)
+  toPublish.delete(topic);
+
+  await client.publishAsync(SHIFTR_CLONE_TOPIC.PUBLISH, { clientId, topic, message: message.toString() });
+})
+
 async function handlePublish(clientId: string, topic: string) {
-  await client.publishAsync(SHIFTR_CLONE_TOPIC.PUBLISH, { clientId, topic });
+  toPublish.set(topic, clientId)
+  // await client.publishAsync(SHIFTR_CLONE_TOPIC.PUBLISH, { clientId, topic });
 }
 
 async function handleUnknowAction(line: string) {

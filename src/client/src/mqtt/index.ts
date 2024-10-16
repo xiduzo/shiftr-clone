@@ -17,6 +17,7 @@ export async function initClient() {
       window.document.body.style.cursor = "default";
       clearTimeout(timeout);
       resolve(client);
+      clientId = client.id;
     });
 
     client.on("message", handleMqttMessage);

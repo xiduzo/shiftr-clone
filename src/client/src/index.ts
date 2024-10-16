@@ -15,7 +15,15 @@ drawSvg(svg);
 
 initClient().finally(fetchConnections);
 
-addKeyboardHandler("c", "clear graph", fetchConnections);
+addKeyboardHandler("c", "clear graph", () => {
+  fetchConnections();
+
+  const messages = document.getElementById("messages");
+
+  if(!messages) return;
+
+  messages.innerHTML = "";
+});
 addKeyboardHandler("r", "reload page", () => window.location.reload());
 addKeyboardHandler("h", "hidden nodes", () => showHiddenNodes());
 

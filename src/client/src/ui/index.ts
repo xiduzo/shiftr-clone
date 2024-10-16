@@ -1,9 +1,9 @@
 import { MQTT_BROKER_NODE_ID } from "../../../common/constants";
 import { Store } from "../d3/store";
 import { updateSvg } from "../d3/svg";
+import { type PayloadMessage } from "../mqtt/messaging";
 
 const keyHandlers = new Map<string, Function>();
-let dialog: HTMLDialogElement | null = null;
 
 export function addKeyboardHandler(
   key: string,
@@ -137,4 +137,34 @@ export function showHiddenNodes() {
   document.body.appendChild(dialog);
   dialog.showModal();
   dialog.onclose = () => dialog?.remove();
+}
+
+const messages: PayloadMessage[] = [];
+
+const messagesList = document.getElementById("messages");
+
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hour12: false,
+});
+
+export function addReceivedMessage(message: PayloadMessage) {
+  messages.push(message);
+
+  if (!messagesList) return;
+
+  if (messagesList.children.length >= 4) {
+    messagesList.lastElementChild?.remove();
+  }
+
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <div class="topic">${message.topic} <time datetime="${message.dateTime}">${dateTimeFormatter.format(message.dateTime)}</time></div>
+    <div class="clientId">${message.clientId}</div>
+    <div class="message">${message.message}</div>
+  `;
+  setTimeout(() => li.remove(), 5000);
+  messagesList.prepend(li);
 }

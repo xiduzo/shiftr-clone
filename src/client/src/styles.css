@@ -43,6 +43,7 @@ body {
     }
 }
 
+#messages,
 #chart,
 #hotkeys,
 #host {
@@ -97,11 +98,11 @@ svg text {
     z-index: -1;
 }
 
-svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):hover {
+svg circle:not([data-topic=MQTT_BROKER_CENTER_NODE_ID]):hover {
     cursor: grab;
 }
 
-svg circle:not(#MQTT_BROKER_CENTER_NODE_ID):active {
+svg circle:not([data-topic=MQTT_BROKER_CENTER_NODE_ID]):active {
     cursor: grabbing;
 }
 
@@ -195,4 +196,46 @@ input {
     cursor: no-drop;
     font-size: 14px;
     margin: 4px 0;
+}
+
+#messages {
+    right: 8px;
+    pointer-events: none;
+}
+
+#messages li {
+    font-size: 16px;
+    width: 320px;
+    padding: 8px;
+    margin: 8px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-primary-lighter);
+    border-radius: 4px;
+}
+
+#messages li .topic {
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+#messages li .topic time {
+    opacity: 0.3;
+    font-size: 12px;
+}
+
+#messages li .message {
+    font-family: monospace;
+    color: var(--color-secondary-lightest);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+#messages li .clientId {
+    color: var(--color-primary-darkest);
+    font-size: 12px;
+    font-style: italic;
 }

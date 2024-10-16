@@ -8,7 +8,6 @@ enum Opacity {
   Full = 1,
   Shallow = 0.5,
   Ghost = 0.2,
-  NearlyInvisible = 0.025,
 }
 
 function addEdgeStyles(
@@ -23,10 +22,6 @@ function addEdgeStyles(
 
       const sourceIsMqttBroker = sourceNode.id === MQTT_BROKER_NODE_ID;
       const isToClient = targetNode.isClient;
-
-      if(Store.getIgnoredNodeIds().some(ignoredId => sourceNode.id.startsWith(ignoredId) || targetNode.id.startsWith(ignoredId))) {
-        return Opacity.NearlyInvisible;
-      }
 
       if (sourceIsMqttBroker && isToClient) return Opacity.Ghost;
       if (isToClient) return Opacity.Shallow;
@@ -53,11 +48,7 @@ function addNodeStyles(
   nodeSelection
     .attr("data-topic", ({ id }) => id)
     .attr("class", "node")
-    .attr("stroke-opacity", ({ id, isClient }) => {
-      if(Store.getIgnoredNodeIds().some(ignoredId => id.startsWith(ignoredId))) {
-        return Opacity.NearlyInvisible;
-      }
-
+    .attr("stroke-opacity", ({ isClient }) => {
       if (isClient) return Opacity.Shallow;
 
       return Opacity.Full;
@@ -75,11 +66,7 @@ function addLabelStyles(
   >,
 ) {
   labelSelection
-    .attr("fill-opacity", ({ id, isClient }) => {
-      if(Store.getIgnoredNodeIds().some(ignoredId => id.startsWith(ignoredId))) {
-        return Opacity.NearlyInvisible;
-      }
-
+    .attr("fill-opacity", ({ isClient }) => {
       if (isClient) return Opacity.Shallow;
 
       return Opacity.Full;
@@ -92,15 +79,18 @@ function addLabelStyles(
 export function drawSvg(
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>,
 ) {
-  const edges = Store.getEdges();
-  const nodes = Store.getNodes();
+  const edges = Store.getEdges(false);
+  const nodes = Store.getNodes(false);
 
   const style = getComputedStyle(document.documentElement);
   const width = window.innerWidth;
   const height = window.innerHeight;
   svg.attr("width", width).attr("height", height);
 
-  const link = svg
+  const svgContent = svg.append("g");
+  svgContent.attr("class", "content");
+
+  const link = svgContent
     .append("g")
     .attr("stroke-width", 1.5)
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
@@ -110,7 +100,7 @@ export function drawSvg(
     .join("line");
   addEdgeStyles(link);
 
-  const node = svg
+  const node = svgContent
     .append("g")
     .attr("stroke", style.getPropertyValue("--color-secondary-lightest"))
     .attr("fill", style.getPropertyValue("--color-primary"))
@@ -120,7 +110,7 @@ export function drawSvg(
     .join("circle");
   addNodeStyles(node);
 
-  const text = svg
+  const text = svgContent
     .append("g")
     .attr("id", "labels")
     .attr("fill", style.getPropertyValue("--color-secondary"))
@@ -134,12 +124,40 @@ export function drawSvg(
     .join("text");
   addLabelStyles(text);
 
-  svg
+  svgContent
     .append("g")
     .attr("class", "packets")
     .attr("fill", style.getPropertyValue("--color-secondary-lightest"));
 
   runSimulation(link, node, text);
+
+  // TODO: fix translate after viewport resize
+  const zoom = d3
+    .zoom<SVGSVGElement, undefined>()
+    .scaleExtent([0.5, 2]) // Set the zoom scale extent
+    .on("zoom", ({ transform }) => {
+      const scale = transform.k;
+
+      // Calculate the center of the viewport
+      const viewportCenterX = width / 2;
+      const viewportCenterY = height / 2;
+
+      // Calculate the center of the svgContent based on the current zoom scale
+      const contentCenterX = (width / 2) * scale;
+      const contentCenterY = (height / 2) * scale;
+
+      // Calculate the translation to keep the svgContent centered
+      const translateX = viewportCenterX - contentCenterX;
+      const translateY = viewportCenterY - contentCenterY;
+
+      // Apply the transformation
+      svgContent.attr(
+        "transform",
+        `translate(${translateX}, ${translateY}) scale(${scale})`,
+      );
+    });
+
+  svg.call(zoom);
 
   const svgNode = svg.node();
   const chart = document.querySelector<HTMLDivElement>("#chart");
@@ -149,8 +167,8 @@ export function drawSvg(
 }
 
 export function updateSvg() {
-  const edges = Store.getEdges()
-  const nodes = Store.getNodes();
+  const edges = Store.getEdges(false);
+  const nodes = Store.getNodes(false);
 
   const linkGroup = d3.select<SVGGElement, undefined>("#links");
   const link = linkGroup

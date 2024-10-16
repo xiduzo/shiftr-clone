@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { clientId } from ".";
 import {
-    CLIENT_ID_PREFIX,
-    MQTT_BROKER_NODE_ID,
+  CLIENT_ID_PREFIX,
+  MQTT_BROKER_NODE_ID,
 } from "../../../common/constants";
 import { SHIFTR_CLONE_TOPIC } from "../../../common/topics";
 import { generateUUID } from "../../../common/utils";
@@ -11,34 +11,53 @@ import { Store } from "../d3/store";
 import { updateSvg } from "../d3/svg";
 import { MqttEdge, MqttNode } from "../d3/types";
 import {
-    createClientNodeIfNotExist,
-    createLinkId,
-    createPathNodesIfNotExist,
-    findOrCreateNode,
+  createClientNodeIfNotExist,
+  createLinkId,
+  createPathNodesIfNotExist,
+  findOrCreateNode,
 } from "../d3/utils";
+import { addReceivedMessage } from "../ui";
 
 const Message = z.object({
   id: z.string().uuid(),
+  dateTime: z.date({coerce: true })
 });
+
 const ClientMessage = Message.extend({
   clientId: z.string(),
 });
 const TopicMessage = ClientMessage.extend({
   topic: z.string(),
+
 });
+const PayloadMessage = TopicMessage.extend({
+  message: z.string(),
+})
+export type PayloadMessage = z.infer<typeof PayloadMessage>;
+
+const disconnecting = new Map<string, NodeJS.Timeout>();
+
+const CLIENT_DISCONNECT_GRACE_PERIOD = 2000;
 
 export function handleMqttMessage(topic: string, message: Buffer | Uint8Array) {
-  // console.log("messageHandler", topic, message.toString());
-  // console.log("messageHandler", topic, message.toString());
   const parsed = JSON.parse(message.toString());
 
   switch (topic) {
     case SHIFTR_CLONE_TOPIC.DISCONNECT:
-      handleDisconnect(ClientMessage.parse(parsed));
-      updateSvg();
+      const disconnectMessage = ClientMessage.parse(parsed);
+      clearTimeout(disconnecting.get(disconnectMessage.clientId));
+      disconnecting.set(
+        disconnectMessage.clientId,
+        setTimeout(() => {
+          handleDisconnect(disconnectMessage);
+          updateSvg();
+        }, CLIENT_DISCONNECT_GRACE_PERIOD),
+      );
       break;
     case SHIFTR_CLONE_TOPIC.CONNECT:
-      handleConnect(ClientMessage.parse(parsed));
+      const connectedMessage = ClientMessage.parse(parsed);
+      clearTimeout(disconnecting.get(connectedMessage.clientId));
+      handleConnect(connectedMessage);
       updateSvg();
       break;
     case SHIFTR_CLONE_TOPIC.SUBSCRIBE:
@@ -50,7 +69,9 @@ export function handleMqttMessage(topic: string, message: Buffer | Uint8Array) {
       updateSvg();
       break;
     case SHIFTR_CLONE_TOPIC.PUBLISH:
-      handlePublish(TopicMessage.parse(parsed));
+      const publishMessage = PayloadMessage.parse(parsed);
+      handlePublish(publishMessage);
+      addReceivedMessage(publishMessage)
       break;
     default:
       console.log("default", topic, message);

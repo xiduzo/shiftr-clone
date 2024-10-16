@@ -11,15 +11,31 @@ let globalNodes: MqttNode[] = [
   },
 ];
 let globalEdges: MqttEdge[] = [];
-let globalIgnoredNodeIds: Set<string> = new Set();
+const localIgnoredNodeIds = localStorage.getItem("ignoredNodeIds");
+let globalIgnoredNodeIds: Set<string> = new Set(JSON.parse(localIgnoredNodeIds ?? "[]"));
 
 export class Store {
-  static getNodes() {
-    return globalNodes;
+  static getNodes(includeIgnored = true) {
+    if(includeIgnored) {
+      return globalNodes;
+    }
+
+    return globalNodes.filter(node => {
+      return !Store.isIngoredNodeId(node.id);
+    });
   }
 
-  static getEdges() {
-    return globalEdges;
+  static getEdges(includeIgnored = true) {
+    if(includeIgnored) {
+      return globalEdges;
+    }
+
+    return globalEdges.filter(edge => {
+      const sourceId = (edge.source as MqttNode).id;
+      const targetId = (edge.target as MqttNode).id;
+
+      return !Store.isIngoredNodeId(sourceId) && !Store.isIngoredNodeId(targetId);
+    });
   }
 
   static addNode(node: MqttNode) {
@@ -45,10 +61,12 @@ export class Store {
 
   static addIgnoredNodeId(id: string) {
     globalIgnoredNodeIds.add(id);
+    localStorage.setItem("ignoredNodeIds", JSON.stringify(Array.from(globalIgnoredNodeIds)));
   }
 
   static removeIgnoredNodeId(id: string) {
     globalIgnoredNodeIds.delete(id);
+    localStorage.setItem("ignoredNodeIds", JSON.stringify(Array.from(globalIgnoredNodeIds)));
   }
 
   static isIngoredNodeId(id: string) {

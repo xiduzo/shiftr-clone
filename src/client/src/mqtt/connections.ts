@@ -15,7 +15,6 @@ export function fetchConnections() {
   fetch(import.meta.env.VITE_CLIENT_HTTP_CONNECTIONS)
     .then((res) => res.json())
     .then(async (data: Record<string, string[]>) => {
-      console.log(data);
       const clients = Object.entries(data);
       const clientIds = [
         MQTT_BROKER_NODE_ID,
