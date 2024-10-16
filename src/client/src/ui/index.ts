@@ -155,16 +155,12 @@ export function addReceivedMessage(message: PayloadMessage) {
 
   if (!messagesList) return;
 
-  if (messagesList.children.length >= 4) {
-    messagesList.lastElementChild?.remove();
-  }
-
   const li = document.createElement("li");
   li.innerHTML = `
     <div class="topic">${message.topic} <time datetime="${message.dateTime}">${dateTimeFormatter.format(message.dateTime)}</time></div>
     <div class="clientId">${message.clientId}</div>
     <div class="message">${message.message}</div>
   `;
-  setTimeout(() => li.remove(), 5000);
+  setTimeout(() => li.remove(), 15000);
   messagesList.prepend(li);
 }

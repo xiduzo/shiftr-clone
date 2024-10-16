@@ -199,8 +199,10 @@ input {
 }
 
 #messages {
-    right: 8px;
-    pointer-events: none;
+    right: 0;
+    padding: 0 8px;
+    overflow-y: scroll;
+    height: 100vh;
 }
 
 #messages li {
@@ -212,6 +214,15 @@ input {
     flex-direction: column;
     background-color: var(--color-primary-lighter);
     border-radius: 4px;
+}
+
+#messages li:active {
+    transform: scale(1);
+}
+
+li:hover,
+li:focus {
+    color: var(--color-secondary);
 }
 
 #messages li .topic {
